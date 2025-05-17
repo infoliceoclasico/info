@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Información</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const jornadaSelect = document.getElementById("jornada");
+      const nivelSelect = document.getElementById("nivel");
+      const gradoSelect = document.getElementById("grado");
+
+      const opcionesPorJornada = {
+        "Matutina": {
+          "Preprimaria": ["Kínder", "Párvulos", "Preparatoria"],
+          "Primaria": ["1ro Primaria", "2do Primaria", "3ro Primaria", "4to Primaria", "5to Primaria", "6to Primaria"],
+          "Básicos": ["1ro Básico", "2do Básico", "3ro Básico"],
+          "Diversificado": [
+            "4to Computación", "5to Computación",
+            "4to Ciencias y Letras", "5to Ciencias y Letras",
+            "4to Dibujo Técnico", "5to Dibujo Técnico",
+            "4to Perito Contador", "5to Perito Contador", "6to Perito Contador",
+            "4to Administración", "5to Administración", "6to Administración"
+          ]
+        },
+        "Fin de Semana": {
+          "Básicos": ["1ro Básico", "2do Básico", "3ro Básico", "Básicos por Madurez"],
+          "Diversificado": [
+            "4to Computación", "5to Computación",
+            "4to Ciencias y Letras", "5to Ciencias y Letras",
+            "4to Perito Contador", "5to Perito Contador", "6to Perito Contador",
+            "4to Administración", "5to Administración", "6to Administración",
+            "Bachillerato por Madurez"
+          ]
+        }
+      };
+
+      function actualizarNiveles() {
+        const jornada = jornadaSelect.value;
+        nivelSelect.innerHTML = "<option value=''>Seleccione...</option>";
+        gradoSelect.innerHTML = "<option value=''>Seleccione un nivel primero...</option>";
+
+        if (opcionesPorJornada[jornada]) {
+          Object.keys(opcionesPorJornada[jornada]).forEach(function (nivel) {
+            const option = document.createElement("option");
+            option.value = nivel;
+            option.textContent = nivel;
+            nivelSelect.appendChild(option);
+          });
+        }
+      }
+
+      function actualizarGrados() {
+        const jornada = jornadaSelect.value;
+        const nivel = nivelSelect.value;
+        gradoSelect.innerHTML = "<option value=''>Seleccione...</option>";
+
+        if (opcionesPorJornada[jornada] && opcionesPorJornada[jornada][nivel]) {
+          opcionesPorJornada[jornada][nivel].forEach(function (grado) {
+            const option = document.createElement("option");
+            option.value = grado;
+            option.textContent = grado;
+            gradoSelect.appendChild(option);
+          });
+        }
+      }
+
+      jornadaSelect.addEventListener("change", actualizarNiveles);
+      nivelSelect.addEventListener("change", actualizarGrados);
+    });
+  </script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="imagenes/logo1.png" alt="Logo MUEBLE" class="logo">
+    </header>
+
+    <h1>Registro de Información</h1>
+    <form id="formulario-registro" class="formulario">
+      <p><strong>Número de Registro:</strong> <span id="numero-registro">001</span></p>
+
+      <label for="nombre-padre">Nombre del Padre/Madre:</label>
+      <input type="text" id="nombre-padre" name="nombre-padre" required>
+
+      <label for="telefono">Número de Teléfono 1:</label>
+      <input type="tel" id="telefono" name="telefono" required>
+
+      <label for="telefono2">Número de Teléfono 2 (opcional):</label>
+      <input type="tel" id="telefono2" name="telefono2">
+
+      <label for="correo">Correo Electrónico:</label>
+      <input type="email" id="correo" name="correo" required>
+
+      <label for="nombre-alumno">Nombre del Alumno:</label>
+      <input type="text" id="nombre-alumno" name="nombre-alumno" required>
+
+      <label for="edad">Edad:</label>
+      <input type="number" id="edad" name="edad" required>
+
+      <label for="jornada">Jornada:</label>
+      <select id="jornada" name="jornada" required>
+        <option value="">Seleccione...</option>
+        <option value="Matutina">Matutina</option>
+        <option value="Fin de Semana">Fin de Semana</option>
+      </select>
+
+      <label for="nivel">Nivel Educativo:</label>
+      <select id="nivel" name="nivel" required>
+        <option value="">Seleccione una jornada primero...</option>
+      </select>
+
+      <label for="grado">Grado de Interés:</label>
+      <select id="grado" name="grado" required>
+        <option value="">Seleccione un nivel primero...</option>
+      </select>
+
+      <div class="botones">
+        <button type="button" id="guardar" class="boton">Guardar</button>
+        <a href="index.html" class="boton">Volver</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("guardar").addEventListener("click", function () {
+      const formData = new URLSearchParams();
+      formData.append("nombrePadre", document.getElementById("nombre-padre").value);
+      formData.append("telefono", document.getElementById("telefono").value);
+      formData.append("telefono2", document.getElementById("telefono2").value);
+      formData.append("correo", document.getElementById("correo").value);
+      formData.append("nombreAlumno", document.getElementById("nombre-alumno").value);
+      formData.append("edad", document.getElementById("edad").value);
+      formData.append("jornada", document.getElementById("jornada").value);
+      formData.append("nivel", document.getElementById("nivel").value);
+      formData.append("grado", document.getElementById("grado").value);
+
+      fetch("https://script.google.com/macros/s/AKfycbyQRL9MvWHG_CXk1RbOdlxV3fc02wYcNPxHxH4PDEsHxx7xyboaSbQGBI_1rA6QXrb8KQ/exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData
+      })
+      .then(res => res.text())
+      .then(txt => {
+        alert("Registro guardado correctamente.");
+        document.getElementById("formulario-registro").reset();
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        alert("Ocurrió un error al guardar los datos.");
+      });
+    });
+  </script>
+</body>
+</html>
