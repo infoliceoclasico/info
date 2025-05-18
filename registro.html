@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Información</title>
   <link rel="stylesheet" href="estilos.css">
   <script>
@@ -135,17 +136,24 @@
       formData.append("nivel", document.getElementById("nivel").value);
       formData.append("grado", document.getElementById("grado").value);
 
-      fetch("https://script.google.com/macros/s/AKfycbyQRL9MvWHG_CXk1RbOdlxV3fc02wYcNPxHxH4PDEsHxx7xyboaSbQGBI_1rA6QXrb8KQ/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbxgptqxGCclRfX3Hb5q40HLGt1slIrX8WHXoTHD6M7seRd0UeWzTzSdZ13hQkyltwQ3cg/exec", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded"
         },
         body: formData
       })
-      .then(res => res.text())
-      .then(txt => {
-        alert("Registro guardado correctamente.");
-        document.getElementById("formulario-registro").reset();
+      .then(response => {
+        if (!response.ok) throw new Error("Error de red");
+        return response.text();
+      })
+      .then(text => {
+        if (text.trim() === "OK") {
+          alert("Registro guardado correctamente.");
+          document.getElementById("formulario-registro").reset();
+        } else {
+          alert("Ocurrió un error inesperado. Intente nuevamente.");
+        }
       })
       .catch(err => {
         console.error("Error:", err);
