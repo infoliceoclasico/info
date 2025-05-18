@@ -73,14 +73,13 @@
 </head>
 <body>
   <div class="contenedor">
-    <header>
-      <img src="imagenes/logo1.png" alt="Logo MUEBLE" class="logo">
-    </header>
+  <header style="margin-bottom: 10px;">
+    <img src="imagenes/logo1.png" alt="Logo MUEBLE" class="logo">
+  </header>
 
     <h1>Registro de Información</h1>
     <form id="formulario-registro" class="formulario">
-      <p><strong>Número de Registro:</strong> <span id="numero-registro">001</span></p>
-
+      
       <label for="nombre-padre">Nombre del Padre/Madre:</label>
       <input type="text" id="nombre-padre" name="nombre-padre" required>
 
@@ -136,7 +135,7 @@
       formData.append("nivel", document.getElementById("nivel").value);
       formData.append("grado", document.getElementById("grado").value);
 
-      fetch("https://script.google.com/macros/s/AKfycbxgptqxGCclRfX3Hb5q40HLGt1slIrX8WHXoTHD6M7seRd0UeWzTzSdZ13hQkyltwQ3cg/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbyF7u6j-FnHTqrZZ17Uw0vdHM8_p2WQ2gYcAW1HAuSTq5JuhW8q1G4dpoJn3x1K7myytg/exec", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded"
