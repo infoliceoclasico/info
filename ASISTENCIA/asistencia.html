@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Asistencia</title>
+  <link rel="stylesheet" href="estilos.css">
+  
+    <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .contenedor {
+      max-width: 500px;
+      margin: 50px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 30px;
+      color: #1a1a1a;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #2c3e50;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #34495e;
+    }
+    .mensaje {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .mensaje.ok {
+      color: green;
+    }
+    .mensaje.ya {
+      color: orange;
+    }
+    .mensaje.error {
+      color: red;
+    }
+    
+    .mensaje {
+      font-size: 20px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="LOGO CON FONDO.jpg" alt="Logo" class="logo">
+      <h1>Registro de Asistencia</h1>
+    </header>
+
+    <div class="formulario">
+      <label for="codigo">Ingrese su código de alumno:</label>
+      <input type="text" id="codigo" placeholder="Ej. 25ara01">
+      <button onclick="registrarAsistencia()">Registrar</button>
+    </div>
+
+    <div id="mensaje" class="mensaje"></div>
+  </div>
+
+  <script>
+    async function registrarAsistencia() {
+      const codigoInput = document.getElementById("codigo");
+      const codigo = codigoInput.value.trim().toLowerCase();
+      const mensaje = document.getElementById("mensaje");
+      mensaje.textContent = "";
+
+      if (!codigo) {
+        mensaje.textContent = "Por favor, ingrese un código.";
+        mensaje.style.color = "red";
+        return;
+      }
+
+      try {
+        const respuesta = await fetch("ALUMNOS.csv");
+        const texto = await respuesta.text();
+        const lineas = texto.split("\n");
+        const encabezados = lineas[0].split(";");
+        const alumnos = lineas.slice(1).map(linea => {
+          const valores = linea.split(";");
+          const alumno = {};
+          encabezados.forEach((encabezado, i) => {
+            alumno[encabezado.trim()] = valores[i] ? valores[i].trim() : "";
+          });
+          return alumno;
+        });
+
+        const alumno = alumnos.find(a => a["CODIGO"].toLowerCase() === codigo);
+        if (!alumno) {
+          mensaje.textContent = "Código no encontrado.";
+          mensaje.style.color = "red";
+          return;
+        }
+
+        const formData = new URLSearchParams();
+        formData.append("codigo", alumno["CODIGO"]);
+        formData.append("nombre", alumno["NOMBRE"]);
+        formData.append("grado", alumno["GRADO"]);
+        formData.append("jornada", alumno["JORNADA"]);
+        formData.append("punto", "Puerta Principal");
+
+        const respuesta2 = await fetch("https://script.google.com/macros/s/AKfycbzCAFo-Cz0yutnXFZANzic7YOKATjlnTkMk0u3puuxw_2EzAozSmbvoXNPElQomUWEn/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData
+        });
+
+        const textoRespuesta = await respuesta2.text();
+        if (textoRespuesta.trim() === "OK") {
+          mensaje.textContent = `✅ Asistencia registrada para ${alumno["NOMBRE"]} – ${alumno["GRADO"]} (${alumno["JORNADA"]})`;
+          mensaje.style.color = "green";
+        } else if (textoRespuesta.trim() === "YA_REGISTRADO") {
+          mensaje.textContent = `⚠️ Este alumno ya registró asistencia hoy: ${alumno["NOMBRE"]} – ${alumno["GRADO"]}`;
+          mensaje.style.color = "orange";
+        } else {
+          mensaje.textContent = "❌ Error desconocido. Intente más tarde.";
+          mensaje.style.color = "red";
+        }
+
+        codigoInput.value = ""; // Limpiar campo de texto
+
+      } catch (error) {
+        console.error(error);
+        mensaje.textContent = "❌ Error al conectar con el servidor.";
+        mensaje.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>
