@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Correos de Maestros</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <div class="contenedor">
+    <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
+    <h1>Correos de Maestros</h1>
+
+    <div id="contenedor-docentes" class="grid-docentes">
+      <!-- Aquí se cargan los docentes dinámicamente -->
+    </div>
+
+    <a href="index.html" class="boton-volver">Volver</a>
+  </div>
+
+  <script>
+    async function cargarDocentes() {
+      const url = "https://script.google.com/macros/s/AKfycbzv0vRljWWazKtO-4vXKans054XI7xW6vSA789rPG2H2VaW0lHtODxHonYP8Fv94SXF/exec";
+      const contenedor = document.getElementById("contenedor-docentes");
+
+      try {
+        const res = await fetch(url);
+        const datos = await res.json();
+
+        datos.forEach(docente => {
+          const btn = document.createElement("button");
+          btn.className = "docente-btn";
+          btn.textContent = docente.DOCENTE;
+
+          btn.addEventListener("click", () => {
+            btn.textContent = docente.CORREO;
+          });
+
+          contenedor.appendChild(btn);
+        });
+
+      } catch (err) {
+        console.error("Error al cargar docentes:", err);
+        contenedor.innerHTML = "<p>Error al cargar los datos. Intente más tarde.</p>";
+      }
+    }
+
+    cargarDocentes();
+  </script>
+</body>
+</html>
