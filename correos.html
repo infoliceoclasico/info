@@ -1,25 +1,50 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Correos de Maestros</title>
-  <link rel="stylesheet" href="estilos.css">
-  <style>
-    iframe {
-      width: 100%;
-      height: 600px;
-      border: none;
-    }
-  </style>
+  <link rel="stylesheet" href="estilos.css" />
 </head>
 <body>
   <div class="contenedor">
     <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
     <h1>Correos de Maestros</h1>
 
-    <iframe src="https://script.google.com/macros/s/AKfycbxPmz_PpeTkUiemq0Cuv09Ao8DYoe7hqDd9tudqKTEYyEVs-rAdbJgnTFRZjxVMt5nS/exec"></iframe>
+    <div id="contenedor-docentes" class="grid-docentes">
+      <!-- Aquí se cargan los docentes dinámicamente -->
+    </div>
 
-    <a href="index.html" class=".B">Volver</a>
+    <a href="index.html" class="B">Volver</a>
   </div>
+
+  <script>
+    async function cargarDocentes() {
+      const url = "https://script.google.com/macros/s/AKfycbxPmz_PpeTkUiemq0Cuv09Ao8DYoe7hqDd9tudqKTEYyEVs-rAdbJgnTFRZjxVMt5nS/exec";
+      const contenedor = document.getElementById("contenedor-docentes");
+
+      try {
+        const respuesta = await fetch(url);
+        if (!respuesta.ok) throw new Error("Respuesta no OK");
+        const datos = await respuesta.json();
+
+        datos.forEach(docente => {
+          const boton = document.createElement("button");
+          boton.className = "docente-btn";
+          boton.textContent = docente.docente;
+          boton.addEventListener("click", () => {
+            boton.textContent = docente.correo;
+          });
+          contenedor.appendChild(boton);
+        });
+
+      } catch (error) {
+        console.error("Error al cargar docentes:", error);
+        contenedor.innerHTML = "<p>Error al cargar los datos. Intente más tarde.</p>";
+      }
+    }
+
+    cargarDocentes();
+  </script>
 </body>
 </html>
