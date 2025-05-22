@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Correos de Maestros</title>
   <link rel="stylesheet" href="estilos.css" />
 </head>
@@ -11,7 +11,9 @@
     <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
     <h1>Correos de Maestros</h1>
 
-    <div id="contenedor-docentes" class="grid-2columnas"></div>
+    <div id="contenedor-docentes" class="grid-docentes-uniforme">
+      <!-- Aquí se cargan los docentes dinámicamente -->
+    </div>
 
     <a href="index.html" class="boton">Volver</a>
   </div>
@@ -26,15 +28,15 @@
         const datos = await res.json();
 
         datos.forEach(docente => {
-          const boton = document.createElement("button");
-          boton.className = "boton-menu";
-          boton.textContent = docente.docente;
+          const btn = document.createElement("button");
+          btn.className = "docente-btn-uniforme";
+          btn.textContent = docente.docente;
 
-          boton.addEventListener("click", () => {
-            boton.textContent = docente.correo;
+          btn.addEventListener("click", () => {
+            btn.textContent = docente.correo;
           });
 
-          contenedor.appendChild(boton);
+          contenedor.appendChild(btn);
         });
 
       } catch (err) {
