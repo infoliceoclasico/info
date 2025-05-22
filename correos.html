@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Correos de Maestros</title>
   <link rel="stylesheet" href="estilos.css" />
 </head>
@@ -11,37 +10,40 @@
     <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
     <h1>Correos de Maestros</h1>
 
-    <div id="contenedor-docentes" class="grid-docentes-uniforme">
-      <!-- Aquí se cargan los docentes dinámicamente -->
+    <div class="bloque-correos">
+      <label for="lista-docentes" class="etiqueta-correos">Seleccione un docente:</label>
+      <select id="lista-docentes">
+        <option value="" disabled selected>Elija un nombre</option>
+      </select>
+      <p id="correo-mostrado" class="correo-docente"></p>
     </div>
 
-    <a href="index.html" class="boton">Volver</a>
+    <a href="index.html" class="boton volver">Volver</a>
   </div>
 
   <script>
     async function cargarDocentes() {
       const url = "https://script.google.com/macros/s/AKfycbxPmz_PpeTkUiemq0Cuv09Ao8DYoe7hqDd9tudqKTEYyEVs-rAdbJgnTFRZjxVMt5nS/exec";
-      const contenedor = document.getElementById("contenedor-docentes");
+      const lista = document.getElementById("lista-docentes");
+      const correo = document.getElementById("correo-mostrado");
 
       try {
         const res = await fetch(url);
         const datos = await res.json();
 
         datos.forEach(docente => {
-          const btn = document.createElement("button");
-          btn.className = "docente-btn-uniforme";
-          btn.textContent = docente.docente;
-
-          btn.addEventListener("click", () => {
-            btn.textContent = docente.correo;
-          });
-
-          contenedor.appendChild(btn);
+          const opcion = document.createElement("option");
+          opcion.value = docente.correo;
+          opcion.textContent = docente.docente;
+          lista.appendChild(opcion);
         });
 
+        lista.addEventListener("change", function () {
+          correo.textContent = `✉️ ${this.value}`;
+        });
       } catch (err) {
-        console.error("Error al cargar docentes:", err);
-        contenedor.innerHTML = "<p>Error al cargar los datos. Intente más tarde.</p>";
+        correo.textContent = "❌ Error al cargar los datos.";
+        correo.style.color = "red";
       }
     }
 
