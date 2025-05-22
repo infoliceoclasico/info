@@ -11,11 +11,9 @@
     <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
     <h1>Correos de Maestros</h1>
 
-    <div id="contenedor-docentes" class="grid-docentes">
-      <!-- Aquí se cargan los docentes dinámicamente -->
-    </div>
+    <div id="contenedor-docentes" class="grid-2columnas"></div>
 
-    <a href="index.html" class="B">Volver</a>
+    <a href="index.html" class="boton">Volver</a>
   </div>
 
   <script>
@@ -24,22 +22,23 @@
       const contenedor = document.getElementById("contenedor-docentes");
 
       try {
-        const respuesta = await fetch(url);
-        if (!respuesta.ok) throw new Error("Respuesta no OK");
-        const datos = await respuesta.json();
+        const res = await fetch(url);
+        const datos = await res.json();
 
         datos.forEach(docente => {
           const boton = document.createElement("button");
-          boton.className = "docente-btn";
+          boton.className = "boton-menu";
           boton.textContent = docente.docente;
+
           boton.addEventListener("click", () => {
             boton.textContent = docente.correo;
           });
+
           contenedor.appendChild(boton);
         });
 
-      } catch (error) {
-        console.error("Error al cargar docentes:", error);
+      } catch (err) {
+        console.error("Error al cargar docentes:", err);
         contenedor.innerHTML = "<p>Error al cargar los datos. Intente más tarde.</p>";
       }
     }
