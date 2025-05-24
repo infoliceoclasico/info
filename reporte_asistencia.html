@@ -9,13 +9,14 @@
 
   <img src="imagenes/logo1.png" alt="Logo" class="logo">
 
-  <div class="contenedor" id="contenido">
+  <div class="contenedor" id="contenido" style="display: none;">
     <h2 class="titulo-modulo">Reportes de Asistencia</h2>
     <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
 
     <!-- Aquí irán los reportes próximamente -->
 
     <a href="index.html" class="boton">Volver al Menú</a>
+    <a href="asistencia_login.html" onclick="cerrarSesion()" class="boton">Cerrar Sesión</a>
   </div>
 
   <script>
@@ -25,6 +26,11 @@
       window.location.href = "asistencia_login.html";
     } else {
       document.getElementById("nombreUsuario").textContent = usuario;
+      document.getElementById("contenido").style.display = "block";
+    }
+
+    function cerrarSesion() {
+      sessionStorage.removeItem("usuario");
     }
   </script>
 
