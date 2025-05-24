@@ -9,7 +9,7 @@
 
   <img src="imagenes/logo1.png" alt="Logo" class="logo">
 
-  <div class="contenedor">
+  <div class="contenedor" id="contenido">
     <h2 class="titulo-modulo">Reportes de Asistencia</h2>
     <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
 
@@ -20,8 +20,12 @@
 
   <script>
     const usuario = sessionStorage.getItem("usuario");
-    const span = document.getElementById("nombreUsuario");
-    span.textContent = usuario ? usuario : "Invitado";
+
+    if (!usuario) {
+      window.location.href = "asistencia_login.html";
+    } else {
+      document.getElementById("nombreUsuario").textContent = usuario;
+    }
   </script>
 
 </body>
