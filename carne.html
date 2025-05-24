@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Olvidé mi Carné</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+
+  <div class="contenedor">
+    <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
+    <h1>Olvidé mi Carné</h1>
+
+    <div class="tarjeta-carne">
+      <form id="formOlvideCarne">
+        <label for="codigoAlumno" class="etiqueta-carne">Ingrese su código de alumno:</label>
+        <input type="text" id="codigoAlumno" name="codigoAlumno" required />
+        <button type="submit" class="boton">Solicitar Pase</button>
+      </form>
+      <div id="mensajeResultado" class="mensaje-carne"></div>
+    </div>
+
+    <a href="index.html" class="boton">VOLVER</a>
+  </div>
+
+  <script>
+    document.getElementById("formOlvideCarne").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const codigo = document.getElementById("codigoAlumno").value.trim();
+      const mensaje = document.getElementById("mensajeResultado");
+      mensaje.className = "mensaje-carne";
+      mensaje.textContent = "Procesando...";
+
+      try {
+        const respuesta = await fetch("https://script.google.com/macros/s/AKfycbyk_cx5jqpQiiPtITNlP5_YBAjPzOjKkoT6xOS9wSD259EqP8mW3B0Rki307thPwXPVgw/exec", {
+          method: "POST",
+          body: JSON.stringify({ codigo }),
+        });
+
+        const resultado = await respuesta.json();
+        if (resultado.mensaje.includes("éxito")) {
+          const textoPase = resultado.pases === 1 ? "PRIMER" :
+                            resultado.pases === 2 ? "SEGUNDO" :
+                            "TERCER";
+
+          const advertencia = resultado.pases === 3
+            ? "<br><strong style='color: red;'>Este es su último pase permitido. Debe reponer su carné.</strong>"
+            : "";
+
+          mensaje.className = "mensaje-carne ok";
+          mensaje.innerHTML = `
+            ✔️ Pase creado con éxito.<br>
+            Este es su <strong>${textoPase}</strong> pase por olvido de carné.
+            ${advertencia}
+            <br>Verifique su correo para más información.`;
+        } else {
+          mensaje.className = "mensaje-carne error";
+          mensaje.textContent = resultado.mensaje;
+        }
+      } catch (error) {
+        mensaje.className = "mensaje-carne error";
+        mensaje.textContent = "Error al conectar con el servidor.";
+      }
+
+      setTimeout(() => window.location.href = "index.html", 10000);
+    });
+  </script>
+
+</body>
+</html>
