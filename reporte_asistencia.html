@@ -89,7 +89,7 @@
       sessionStorage.removeItem("usuario");
     }
 
-   async function filtrarReporte() {
+    async function filtrarReporte() {
   const fechaInput = document.getElementById("fechaFiltro").value;
   const grado = document.getElementById("gradoFiltro").value;
   const tabla = document.getElementById("tablaAsistencia");
@@ -100,14 +100,13 @@
     return;
   }
 
-  // ✅ Forzar formato yyyy-mm-dd para evitar errores de interpretación
-  const fecha = new Date(fechaInput);
-  const fechaFormateada = fecha.toISOString().split("T")[0];
+  // ✅ Asegurar formato correcto (yyyy-mm-dd)
+  const fecha = new Date(fechaInput).toISOString().split("T")[0];
 
   tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
   try {
-    const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fechaFormateada}&grado=${encodeURIComponent(grado)}`;
+    const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
     const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
     const respuesta = await fetch(proxy);
     const textoPlano = await respuesta.text();
@@ -129,6 +128,7 @@
     tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
   }
 }
+
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
