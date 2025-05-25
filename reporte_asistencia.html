@@ -106,9 +106,11 @@
         const urlOriginal = `https://script.google.com/macros/s/AKfycbyJkwJyUH8EMvZUa1JtrYExE8lnekd9tZTmW3e8I5dzLp8fqwaAi8tymvxsgcFFp_Mz/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
         const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
         const respuesta = await fetch(proxy);
-        const datos = await respuesta.json();
+        const textoPlano = await respuesta.text();
+        console.log("Texto plano recibido:", textoPlano);
+        const datos = JSON.parse(textoPlano);
 
-        console.log("Datos recibidos:", datos);
+        console.log("Datos recibidos como objeto:", datos);
 
         if (!Array.isArray(datos)) {
           console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
@@ -136,6 +138,7 @@
       const tabla = document.getElementById("tablaAsistencia");
 
       if (!Array.isArray(datos) || datos.length === 0) {
+        console.log("No hay datos para mostrar o no es un array.", datos);
         tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin resultados.</td></tr>`;
         return;
       }
