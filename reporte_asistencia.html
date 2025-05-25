@@ -66,10 +66,6 @@
           <tr><td colspan="6" style="text-align:center;">Esperando datos...</td></tr>
         </tbody>
       </table>
-
-      <div style="margin-top: 20px;">
-        <button class="boton" onclick="verAusentesGenerales()">Ver ausentes de todos los grados</button>
-      </div>
     </div>
 
     <div class="botones" style="margin-top: 30px;">
@@ -107,9 +103,9 @@
       tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
       try {
-        const proxy = "https://corsproxy.io/?";
-        const urlOriginal = `https://script.google.com/macros/s/AKfycbxaH_Q_swUC1vZ9AaAlbfBheH6PXhOC1hLLzuKv80csD-C1zjrX6CY157QhV0iHV82c/execfecha=${fecha}&grado=${encodeURIComponent(grado)}`;
-        const respuesta = await fetch(proxy + encodeURIComponent(urlOriginal));
+        const urlOriginal = `https://script.google.com/macros/s/AKfycbxaH_Q_swUC1vZ9AaAlbfBheH6PXhOC1hLLzuKv80csD-C1zjrX6CY157QhV0iHV82c/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
+        const respuesta = await fetch(proxy);
         const datos = await respuesta.json();
 
         if (!Array.isArray(datos)) {
