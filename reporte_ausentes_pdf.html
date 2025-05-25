@@ -6,7 +6,6 @@
   <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
-
   <img src="imagenes/logo1.png" alt="Logo" class="logo">
 
   <div class="contenedor">
@@ -17,7 +16,7 @@
       <div class="filtros-reporte">
         <label for="fechaAusentes">Fecha:</label>
         <input type="date" id="fechaAusentes">
-        <button class="boton" onclick="generarYEnviarReportePDF()">Ver todos los ausentes</button>
+        <button class="boton" onclick="generarYEnviarReportePDF()">Generar y Enviar Reporte</button>
       </div>
     </div>
 
@@ -35,19 +34,30 @@
       document.getElementById("nombreUsuario").textContent = usuario;
     }
 
+    // Leer fecha de la URL y colocarla automáticamente en el input
+    const params = new URLSearchParams(window.location.search);
+    const fecha = params.get("fecha");
+    if (fecha) {
+      document.getElementById("fechaAusentes").value = fecha;
+    }
+
     async function generarYEnviarReportePDF() {
       const fechaInput = document.getElementById("fechaAusentes").value;
       if (!fechaInput) {
         alert("Por favor seleccione una fecha.");
         return;
       }
+
       const fecha = new Date(fechaInput).toISOString().split("T")[0];
       const url = `https://script.google.com/macros/s/AKfycbzpXQRQW0b8PztUZInne7WUmWMSCsfQNiTOobhD3iZlraIpKx8vLdJW1xup0IQhWIvB/exec?fecha=${fecha}`;
+
       try {
         const respuesta = await fetch(url);
         const resultado = await respuesta.json();
+
         if (resultado.status === "ok") {
           alert("Reporte generado y enviado exitosamente.");
+          window.print();
         } else {
           alert("Hubo un problema al generar el reporte: " + resultado.mensaje);
         }
@@ -57,6 +67,5 @@
       }
     }
   </script>
-
 </body>
 </html>
