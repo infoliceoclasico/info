@@ -332,3 +332,10 @@ button.boton:hover {
 .tabla-reporte tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+
+
+.tarjeta-reporte {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
