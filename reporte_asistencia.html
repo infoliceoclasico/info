@@ -49,7 +49,6 @@
         </select>
 
         <button class="boton" onclick="filtrarReporte()">Filtrar</button>
-
         <label><input type="checkbox" id="soloAusentes" onchange="aplicarFiltroAusentes()"> Mostrar solo ausentes</label>
       </div>
 
@@ -109,9 +108,15 @@
       tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
       try {
-        const url = `https://script.google.com/macros/s/AKfycbxaH_Q_swUC1vZ9AaAlbfBheH6PXhOC1hLLzuKv80csD-C1zjrX6CY157QhV0iHV82c/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const url = `https://script.google.com/macros/s/AKfycbwlb3YtQVrBeNy7nygQ2tVd4imYrJ8fmYTs1NGVDIAQegTR7bwX9o_-eWM49NoqnSxB/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
         const respuesta = await fetch(url);
         const datos = await respuesta.json();
+
+        if (datos.error) {
+          console.error("Error desde servidor:", datos.error);
+          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error}</td></tr>`;
+          return;
+        }
 
         datosCompletos = datos;
         mostrarDatosFiltrados(datos);
@@ -152,9 +157,13 @@
 
         let todos = [];
         for (const grado of grados) {
-          const url = `https://script.google.com/macros/s/AKfycbxaH_Q_swUC1vZ9AaAlbfBheH6PXhOC1hLLzuKv80csD-C1zjrX6CY157QhV0iHV82c/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+          const url = `https://script.google.com/macros/s/AKfycbwlb3YtQVrBeNy7nygQ2tVd4imYrJ8fmYTs1NGVDIAQegTR7bwX9o_-eWM49NoqnSxB/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
           const resp = await fetch(url);
           const json = await resp.json();
+          if (json.error) {
+            console.error(`Error al cargar ${grado}:`, json.error);
+            continue;
+          }
           const ausentes = json.filter(d => d.estado === "Ausente");
           todos = todos.concat(ausentes);
         }
@@ -169,7 +178,7 @@
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
-      if (datos.length === 0) {
+      if (!Array.isArray(datos) || datos.length === 0) {
         tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin resultados.</td></tr>`;
         return;
       }
