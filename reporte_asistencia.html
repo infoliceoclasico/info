@@ -108,6 +108,8 @@
         const respuesta = await fetch(proxy);
         const datos = await respuesta.json();
 
+        console.log("Datos recibidos:", datos);
+
         if (!Array.isArray(datos)) {
           console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
           tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error || "Datos no válidos"}</td></tr>`;
