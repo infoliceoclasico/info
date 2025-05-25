@@ -143,7 +143,7 @@
             <td>${fila.grado}</td>
             <td>${fila.jornada}</td>
             <td style="color:${fila.estado === 'Presente' ? 'green' : 'red'}; font-weight:bold">${fila.estado}</td>
-            <td>${fila.hora || '—'}</td>
+            <td>${fila.hora ? new Date(fila.hora).toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
             <td>${fila.acceso || '—'}</td>
           </tr>
         `;
