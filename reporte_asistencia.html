@@ -13,7 +13,6 @@
     <h2 class="titulo-modulo">Reportes de Asistencia</h2>
     <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
 
-    <!-- Filtros -->
     <div class="tarjeta-reporte">
       <div class="filtros-reporte">
         <label for="fechaFiltro">Fecha:</label>
@@ -112,9 +111,9 @@
         const respuesta = await fetch(url);
         const datos = await respuesta.json();
 
-        if (datos.error) {
-          console.error("Error desde servidor:", datos.error);
-          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error}</td></tr>`;
+        if (!Array.isArray(datos)) {
+          console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
+          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error || "Datos no válidos"}</td></tr>`;
           return;
         }
 
@@ -160,8 +159,8 @@
           const url = `https://script.google.com/macros/s/AKfycbwlb3YtQVrBeNy7nygQ2tVd4imYrJ8fmYTs1NGVDIAQegTR7bwX9o_-eWM49NoqnSxB/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
           const resp = await fetch(url);
           const json = await resp.json();
-          if (json.error) {
-            console.error(`Error al cargar ${grado}:`, json.error);
+          if (json.error || !Array.isArray(json)) {
+            console.error(`Error al cargar ${grado}:`, json.error || "Datos no válidos");
             continue;
           }
           const ausentes = json.filter(d => d.estado === "Ausente");
@@ -178,6 +177,7 @@
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
+
       if (!Array.isArray(datos) || datos.length === 0) {
         tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin resultados.</td></tr>`;
         return;
