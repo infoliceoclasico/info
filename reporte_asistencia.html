@@ -21,10 +21,10 @@
 
         <label for="gradoFiltro">Grado:</label>
         <select id="gradoFiltro">
-          <option value="">Todos</option>
+          <option value="">Seleccione grado</option>
           <option value="4to Bachillerato">4to Bachillerato</option>
           <option value="5to Perito">5to Perito</option>
-          <!-- Agrega más grados aquí -->
+          <option value="6to Perito">6to Perito</option>
         </select>
 
         <button class="boton" onclick="filtrarReporte()">Filtrar</button>
@@ -37,16 +37,17 @@
             <th>Grado</th>
             <th>Jornada</th>
             <th>Estado</th>
-            <th>Hora Registro</th>
+            <th>Hora</th>
+            <th>Acceso</th>
           </tr>
         </thead>
         <tbody id="tablaAsistencia">
-          <!-- Aquí se insertarán los resultados -->
+          <tr><td colspan="6" style="text-align:center;">Esperando datos...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Botones de navegación -->
+    <!-- Botones -->
     <div class="botones" style="margin-top: 30px;">
       <a href="index.html" class="boton">Volver al Menú</a>
       <a href="asistencia_login.html" onclick="cerrarSesion()" class="boton">Cerrar Sesión</a>
@@ -67,9 +68,50 @@
       sessionStorage.removeItem("usuario");
     }
 
-    function filtrarReporte() {
-      // Aquí se colocará la lógica de conexión a Google Sheets para cargar datos reales
-      alert("Función de filtrado aún en desarrollo.");
+    async function filtrarReporte() {
+      const fecha = document.getElementById("fechaFiltro").value;
+      const grado = document.getElementById("gradoFiltro").value;
+      const tabla = document.getElementById("tablaAsistencia");
+
+      if (!fecha || !grado) {
+        alert("Por favor seleccione una fecha y un grado.");
+        return;
+      }
+
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
+
+      try {
+        const url = `https://script.google.com/macros/s/AKfycbwlb3YtQVrBeNy7nygQ2tVd4imYrJ8fmYTs1NGVDIAQegTR7bwX9o_-eWM49NoqnSxB/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+
+        if (!Array.isArray(datos)) {
+          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error al procesar datos.</td></tr>`;
+          return;
+        }
+
+        if (datos.length === 0) {
+          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin registros para esa fecha y grado.</td></tr>`;
+          return;
+        }
+
+        tabla.innerHTML = "";
+        for (const fila of datos) {
+          tabla.innerHTML += `
+            <tr>
+              <td>${fila.nombre}</td>
+              <td>${fila.grado}</td>
+              <td>${fila.jornada}</td>
+              <td style="color:${fila.estado === 'Presente' ? 'green' : 'red'}; font-weight:bold">${fila.estado}</td>
+              <td>${fila.hora || '—'}</td>
+              <td>${fila.acceso || '—'}</td>
+            </tr>
+          `;
+        }
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
+      }
     }
   </script>
 
