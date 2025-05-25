@@ -13,7 +13,7 @@
     <h2 class="titulo-modulo">Reportes de Asistencia</h2>
     <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
 
-    <div class="tarjeta-reporte" style="max-width: 1200px; margin: 0 auto;">
+    <div class="tarjeta-reporte">
       <div class="filtros-reporte">
         <label for="fechaFiltro">Fecha:</label>
         <input type="date" id="fechaFiltro">
@@ -48,9 +48,9 @@
         </select>
 
         <button class="boton" onclick="filtrarReporte()">Filtrar</button>
-        <label><input type="checkbox" id="soloAusentes" onchange="aplicarFiltroEstado()"> Mostrar solo ausentes</label>
-        <label><input type="checkbox" id="soloPresentes" onchange="aplicarFiltroEstado()"> Mostrar solo presentes</label>
-        <button class="boton" onclick="verTodosLosAusentes()">Ver todos los ausentes</button>
+        <label><input type="checkbox" id="soloAusentes" onchange="aplicarFiltroAusentes()"> Mostrar solo ausentes</label>
+        <label><input type="checkbox" id="soloPresentes" onchange="aplicarFiltroPresentes()"> Mostrar solo presentes</label>
+        <button class="boton" onclick="generarReporteGeneral()">Ver todos los ausentes</button>
       </div>
 
       <table class="tabla-reporte">
@@ -125,60 +125,32 @@
       }
     }
 
-    async function verTodosLosAusentes() {
-      const fechaInput = document.getElementById("fechaFiltro").value;
-      const tabla = document.getElementById("tablaAsistencia");
-
-      if (!fechaInput) {
-        alert("Por favor seleccione una fecha.");
-        return;
-      }
-
-      const fecha = new Date(fechaInput).toISOString().split("T")[0];
-      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
-
-      try {
-        const grados = Array.from(document.querySelectorAll('#gradoFiltro option'))
-                          .map(opt => opt.value)
-                          .filter(val => val);
-        let ausentesTotales = [];
-
-        for (const grado of grados) {
-          const url = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
-          const respuesta = await fetch(url);
-          const datos = await respuesta.json();
-
-          if (Array.isArray(datos)) {
-            ausentesTotales.push(...datos.filter(d => d.estado === "Ausente"));
-          }
-        }
-
-        ausentesTotales.sort((a, b) => a.grado.localeCompare(b.grado));
-        datosCompletos = ausentesTotales;
-        mostrarDatosFiltrados(ausentesTotales);
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
-      }
+    function aplicarFiltroAusentes() {
+      document.getElementById("soloPresentes").checked = false;
+      const datosFiltrados = datosCompletos.filter(d => d.estado === "Ausente");
+      mostrarDatosFiltrados(datosFiltrados);
     }
 
-    function aplicarFiltroEstado() {
-      const soloAusentes = document.getElementById("soloAusentes").checked;
-      const soloPresentes = document.getElementById("soloPresentes").checked;
-      let filtrados = datosCompletos;
-
-      if (soloAusentes && !soloPresentes) {
-        filtrados = datosCompletos.filter(d => d.estado === "Ausente");
-      } else if (!soloAusentes && soloPresentes) {
-        filtrados = datosCompletos.filter(d => d.estado === "Presente");
-      }
-
-      mostrarDatosFiltrados(filtrados);
+    function aplicarFiltroPresentes() {
+      document.getElementById("soloAusentes").checked = false;
+      const datosFiltrados = datosCompletos.filter(d => d.estado === "Presente");
+      mostrarDatosFiltrados(datosFiltrados);
     }
+
+function generarReporteGeneral() {
+  const fechaInput = document.getElementById("fechaFiltro").value;
+  if (!fechaInput) {
+    alert("Por favor seleccione una fecha.");
+    return;
+  }
+
+  const fecha = new Date(fechaInput).toISOString().split("T")[0];
+  window.open(`reporte_ausentes.html?fecha=${fecha}`, "_blank");
+}
+
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
-
       if (!Array.isArray(datos) || datos.length === 0) {
         tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin resultados.</td></tr>`;
         return;

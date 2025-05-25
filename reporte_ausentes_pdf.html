@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reporte General de Ausentes</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+  <img src="imagenes/logo1.png" alt="Logo" class="logo">
+
+  <div class="contenedor">
+    <h2 class="titulo-modulo">Reporte de Ausentes</h2>
+    <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
+
+    <div class="tarjeta-reporte">
+      <div class="filtros-reporte">
+        <label for="fechaAusentes">Fecha:</label>
+        <input type="date" id="fechaAusentes">
+        <button class="boton" onclick="generarYEnviarReportePDF()">Ver todos los ausentes</button>
+      </div>
+    </div>
+
+    <div class="botones" style="margin-top: 30px;">
+      <a href="index.html" class="boton">Volver al Menú</a>
+    </div>
+  </div>
+
+  <script>
+    const usuario = sessionStorage.getItem("usuario");
+
+    if (!usuario) {
+      window.location.href = "asistencia_login.html";
+    } else {
+      document.getElementById("nombreUsuario").textContent = usuario;
+    }
+
+    async function generarYEnviarReportePDF() {
+      const fechaInput = document.getElementById("fechaAusentes").value;
+      if (!fechaInput) {
+        alert("Por favor seleccione una fecha.");
+        return;
+      }
+      const fecha = new Date(fechaInput).toISOString().split("T")[0];
+      const url = `https://script.google.com/macros/s/AKfycbzpXQRQW0b8PztUZInne7WUmWMSCsfQNiTOobhD3iZlraIpKx8vLdJW1xup0IQhWIvB/exec?fecha=${fecha}`;
+      try {
+        const respuesta = await fetch(url);
+        const resultado = await respuesta.json();
+        if (resultado.status === "ok") {
+          alert("Reporte generado y enviado exitosamente.");
+        } else {
+          alert("Hubo un problema al generar el reporte: " + resultado.mensaje);
+        }
+      } catch (error) {
+        console.error("Error al generar reporte:", error);
+        alert("Ocurrió un error inesperado.");
+      }
+    }
+  </script>
+
+</body>
+</html>
