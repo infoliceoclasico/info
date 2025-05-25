@@ -89,53 +89,46 @@
       sessionStorage.removeItem("usuario");
     }
 
-    async function filtrarReporte() {
-      const fechaInput = document.getElementById("fechaFiltro").value;
-      const grado = document.getElementById("gradoFiltro").value;
-      const tabla = document.getElementById("tablaAsistencia");
-      document.getElementById("soloAusentes").checked = false;
+   async function filtrarReporte() {
+  const fechaInput = document.getElementById("fechaFiltro").value;
+  const grado = document.getElementById("gradoFiltro").value;
+  const tabla = document.getElementById("tablaAsistencia");
+  document.getElementById("soloAusentes").checked = false;
 
-      if (!fechaInput || !grado) {
-        alert("Por favor seleccione una fecha y un grado.");
-        return;
-      }
+  if (!fechaInput || !grado) {
+    alert("Por favor seleccione una fecha y un grado.");
+    return;
+  }
 
-      const fecha = new Date(fechaInput);
-      const fechaFormateada = fecha.toISOString().split("T")[0];
+  // ✅ Forzar formato yyyy-mm-dd para evitar errores de interpretación
+  const fecha = new Date(fechaInput);
+  const fechaFormateada = fecha.toISOString().split("T")[0];
 
-      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
+  tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
-      try {
-        const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fechaFormateada}&grado=${encodeURIComponent(grado)}`;
-        const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
-        const respuesta = await fetch(proxy);
-        const textoPlano = await respuesta.text();
-        console.log("Texto plano recibido:", textoPlano);
-        const datos = JSON.parse(textoPlano);
+  try {
+    const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fechaFormateada}&grado=${encodeURIComponent(grado)}`;
+    const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
+    const respuesta = await fetch(proxy);
+    const textoPlano = await respuesta.text();
+    console.log("Texto plano recibido:", textoPlano);
+    const datos = JSON.parse(textoPlano);
 
-        console.log("Datos recibidos como objeto:", datos);
+    console.log("Datos recibidos como objeto:", datos);
 
-        if (!Array.isArray(datos)) {
-          console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
-          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error || "Datos no válidos"}</td></tr>`;
-          return;
-        }
-
-        datosCompletos = datos;
-        mostrarDatosFiltrados(datos);
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
-      }
+    if (!Array.isArray(datos)) {
+      console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error || "Datos no válidos"}</td></tr>`;
+      return;
     }
 
-    function aplicarFiltroAusentes() {
-      const soloAusentes = document.getElementById("soloAusentes").checked;
-      const datosFiltrados = soloAusentes
-        ? datosCompletos.filter(d => d.estado === "Ausente")
-        : datosCompletos;
-      mostrarDatosFiltrados(datosFiltrados);
-    }
+    datosCompletos = datos;
+    mostrarDatosFiltrados(datos);
+  } catch (error) {
+    console.error("Error al cargar datos:", error);
+    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
+  }
+}
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
