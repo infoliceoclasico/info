@@ -123,14 +123,6 @@
       }
     }
 
-    function aplicarFiltroAusentes() {
-      const soloAusentes = document.getElementById("soloAusentes").checked;
-      const datosFiltrados = soloAusentes
-        ? datosCompletos.filter(d => d.estado === "Ausente")
-        : datosCompletos;
-      mostrarDatosFiltrados(datosFiltrados);
-    }
-
     async function verTodosLosAusentes() {
       const fechaInput = document.getElementById("fechaFiltro").value;
       const tabla = document.getElementById("tablaAsistencia");
@@ -161,6 +153,14 @@
         console.error("Error al cargar datos:", error);
         tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
       }
+    }
+
+    function aplicarFiltroAusentes() {
+      const soloAusentes = document.getElementById("soloAusentes").checked;
+      const datosFiltrados = soloAusentes
+        ? datosCompletos.filter(d => d.estado === "Ausente")
+        : datosCompletos;
+      mostrarDatosFiltrados(datosFiltrados);
     }
 
     function mostrarDatosFiltrados(datos) {
