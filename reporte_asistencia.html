@@ -103,7 +103,7 @@
       tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
       try {
-        const urlOriginal = `https://script.google.com/macros/s/AKfycbx-0n98COAs5UrhBzH9FxYZcW9ptt49bQpZ6sNZDnyn8XBVCwqU8J_nNjUDx8iizs0/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
         const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
         const respuesta = await fetch(proxy);
         const textoPlano = await respuesta.text();
