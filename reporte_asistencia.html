@@ -145,7 +145,7 @@ function generarReporteGeneral() {
   }
 
   const fecha = new Date(fechaInput).toISOString().split("T")[0];
-  window.open(`reporte_ausentes.html?fecha=${fecha}`, "_blank");
+  window.open(`reporte_ausentes_pdf.html?fecha=${fecha}`, "_blank");
 }
 
 
