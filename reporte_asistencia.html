@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <title>Reportes de Asistencia</title>
   <link rel="stylesheet" href="estilos.css">
+  <style>
+    .tarjeta-reporte {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
 
@@ -49,6 +55,7 @@
 
         <button class="boton" onclick="filtrarReporte()">Filtrar</button>
         <label><input type="checkbox" id="soloAusentes" onchange="aplicarFiltroAusentes()"> Mostrar solo ausentes</label>
+        <button class="boton" onclick="verTodosAusentes()">Ver todos los ausentes</button>
       </div>
 
       <table class="tabla-reporte">
@@ -89,42 +96,79 @@
       sessionStorage.removeItem("usuario");
     }
 
-  async function filtrarReporte() {
-  const fechaInput = document.getElementById("fechaFiltro").value;
-  const grado = document.getElementById("gradoFiltro").value;
-  const tabla = document.getElementById("tablaAsistencia");
-  document.getElementById("soloAusentes").checked = false;
+    async function filtrarReporte() {
+      const fecha = document.getElementById("fechaFiltro").value;
+      const grado = document.getElementById("gradoFiltro").value;
+      const tabla = document.getElementById("tablaAsistencia");
+      document.getElementById("soloAusentes").checked = false;
 
-  if (!fechaInput || !grado) {
-    alert("Por favor seleccione una fecha y un grado.");
-    return;
-  }
+      if (!fecha || !grado) {
+        alert("Por favor seleccione una fecha y un grado.");
+        return;
+      }
 
-  // Asegurar formato correcto (yyyy-mm-dd)
-  const fecha = new Date(fechaInput).toISOString().split("T")[0];
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
-  tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
+      try {
+        const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
+        const respuesta = await fetch(proxy);
+        const textoPlano = await respuesta.text();
+        console.log("Texto plano recibido:", textoPlano);
+        const datos = JSON.parse(textoPlano);
 
-  try {
-    const url = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
-    const respuesta = await fetch(url);
-    const datos = await respuesta.json();
+        console.log("Datos recibidos como objeto:", datos);
 
-    if (!Array.isArray(datos)) {
-      console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
-      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error || "Datos no válidos"}</td></tr>`;
-      return;
+        if (!Array.isArray(datos)) {
+          console.error("Error desde servidor:", datos.error || "Respuesta inesperada");
+          tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error: ${datos.error || "Datos no válidos"}</td></tr>`;
+          return;
+        }
+
+        datosCompletos = datos;
+        mostrarDatosFiltrados(datos);
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
+      }
     }
 
-    datosCompletos = datos;
-    mostrarDatosFiltrados(datos);
-  } catch (error) {
-    console.error("Error al cargar datos:", error);
-    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
-  }
-}
+    function aplicarFiltroAusentes() {
+      const soloAusentes = document.getElementById("soloAusentes").checked;
+      const datosFiltrados = soloAusentes
+        ? datosCompletos.filter(d => d.estado === "Ausente")
+        : datosCompletos;
+      mostrarDatosFiltrados(datosFiltrados);
+    }
 
+    async function verTodosAusentes() {
+      const fecha = document.getElementById("fechaFiltro").value;
+      const tabla = document.getElementById("tablaAsistencia");
+      document.getElementById("soloAusentes").checked = false;
+      document.getElementById("gradoFiltro").value = "";
 
+      if (!fecha) {
+        alert("Por favor seleccione una fecha.");
+        return;
+      }
+
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
+
+      try {
+        const urlOriginal = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=TODOS`;
+        const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
+        const respuesta = await fetch(proxy);
+        const textoPlano = await respuesta.text();
+        const datos = JSON.parse(textoPlano);
+
+        const soloAusentes = datos.filter(d => d.estado === "Ausente");
+        datosCompletos = soloAusentes;
+        mostrarDatosFiltrados(soloAusentes);
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se pudo obtener la información.</td></tr>`;
+      }
+    }
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
@@ -137,13 +181,14 @@
 
       tabla.innerHTML = "";
       for (const fila of datos) {
+        const horaFormateada = fila.hora ? new Date(fila.hora).toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' }) : '—';
         tabla.innerHTML += `
           <tr>
             <td>${fila.nombre}</td>
             <td>${fila.grado}</td>
             <td>${fila.jornada}</td>
             <td style="color:${fila.estado === 'Presente' ? 'green' : 'red'}; font-weight:bold">${fila.estado}</td>
-            <td>${fila.hora ? new Date(fila.hora).toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+            <td>${horaFormateada}</td>
             <td>${fila.acceso || '—'}</td>
           </tr>
         `;
