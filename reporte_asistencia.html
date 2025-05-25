@@ -107,7 +107,7 @@
       tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
       try {
-        const url = `https://script.google.com/macros/s/AKfycbwlb3YtQVrBeNy7nygQ2tVd4imYrJ8fmYTs1NGVDIAQegTR7bwX9o_-eWM49NoqnSxB/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const url = `https://script.google.com/macros/s/AKfycbxrCfxvddgy0vU28nd1WVo5onnmOoiTAOYLJBGs5YJi7uYQgVxttKfneefF5WYWrLW7/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
         const respuesta = await fetch(url);
         const datos = await respuesta.json();
 
@@ -156,7 +156,7 @@
 
         let todos = [];
         for (const grado of grados) {
-          const url = `https://script.google.com/macros/s/AKfycbwlb3YtQVrBeNy7nygQ2tVd4imYrJ8fmYTs1NGVDIAQegTR7bwX9o_-eWM49NoqnSxB/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+          const url = `https://script.google.com/macros/s/AKfycbxrCfxvddgy0vU28nd1WVo5onnmOoiTAOYLJBGs5YJi7uYQgVxttKfneefF5WYWrLW7/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
           const resp = await fetch(url);
           const json = await resp.json();
           if (json.error || !Array.isArray(json)) {
