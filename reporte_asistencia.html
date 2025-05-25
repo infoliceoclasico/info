@@ -107,8 +107,9 @@
       tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
       try {
-        const url = `https://script.google.com/macros/s/AKfycbxrCfxvddgy0vU28nd1WVo5onnmOoiTAOYLJBGs5YJi7uYQgVxttKfneefF5WYWrLW7/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
-        const respuesta = await fetch(url);
+        const proxy = "https://corsproxy.io/?";
+        const urlOriginal = `https://script.google.com/macros/s/AKfycbxaH_Q_swUC1vZ9AaAlbfBheH6PXhOC1hLLzuKv80csD-C1zjrX6CY157QhV0iHV82c/execfecha=${fecha}&grado=${encodeURIComponent(grado)}`;
+        const respuesta = await fetch(proxy + encodeURIComponent(urlOriginal));
         const datos = await respuesta.json();
 
         if (!Array.isArray(datos)) {
@@ -131,48 +132,6 @@
         ? datosCompletos.filter(d => d.estado === "Ausente")
         : datosCompletos;
       mostrarDatosFiltrados(datosFiltrados);
-    }
-
-    async function verAusentesGenerales() {
-      const fecha = document.getElementById("fechaFiltro").value;
-      const tabla = document.getElementById("tablaAsistencia");
-
-      if (!fecha) {
-        alert("Debe seleccionar una fecha para ver ausentes generales.");
-        return;
-      }
-
-      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando ausentes generales...</td></tr>`;
-
-      try {
-        const grados = [
-          "KINDER","PÁRVULOS","PREPARATORIA","1RO. PRIMARIA","2DO. PRIMARIA","3RO. PRIMARIA",
-          "4TO. PRIMARIA","5TO. PRIMARIA","6TO. PRIMARIA","1RO. BÁSICO","2DO. BÁSICO","3RO. BÁSICO",
-          "4TO. COMPUTACIÓN","5TO. COMPUTACIÓN","4TO. DIBUJO TÉCNICO","5TO. DIBUJO TÉCNICO",
-          "4TO. CIENCIAS Y LETRAS","5TO. CIENCIAS Y LETRAS",
-          "4TO. PERITO CONTADOR","5TO. PERITO CONTADOR","6TO. PERITO CONTADOR",
-          "4TO. ADMINISTRACIÓN","5TO. ADMINISTRACIÓN","6TO. ADMINISTRACIÓN"
-        ];
-
-        let todos = [];
-        for (const grado of grados) {
-          const url = `https://script.google.com/macros/s/AKfycbxrCfxvddgy0vU28nd1WVo5onnmOoiTAOYLJBGs5YJi7uYQgVxttKfneefF5WYWrLW7/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
-          const resp = await fetch(url);
-          const json = await resp.json();
-          if (json.error || !Array.isArray(json)) {
-            console.error(`Error al cargar ${grado}:`, json.error || "Datos no válidos");
-            continue;
-          }
-          const ausentes = json.filter(d => d.estado === "Ausente");
-          todos = todos.concat(ausentes);
-        }
-
-        datosCompletos = todos;
-        mostrarDatosFiltrados(todos);
-      } catch (err) {
-        console.error("Error al obtener ausentes generales:", err);
-        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error cargando ausentes.</td></tr>`;
-      }
     }
 
     function mostrarDatosFiltrados(datos) {
