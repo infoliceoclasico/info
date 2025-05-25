@@ -107,7 +107,7 @@
         const proxy = "https://corsproxy.io/?" + encodeURIComponent(urlOriginal);
         const respuesta = await fetch(proxy);
         const textoPlano = await respuesta.text();
-        console.log("Texto plano recibido:", textoPlano); // Agregado
+        console.log("Texto plano recibido:", textoPlano);
         const datos = JSON.parse(textoPlano);
 
         console.log("Datos recibidos como objeto:", datos);
