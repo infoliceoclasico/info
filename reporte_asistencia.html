@@ -90,17 +90,18 @@
     }
 
     async function filtrarReporte() {
-      const fechaRaw = document.getElementById("fechaFiltro").value;
-      const fecha = new Date(fechaRaw);
-      const fechaFormateada = fecha.toISOString().split("T")[0];
+      const fechaInput = document.getElementById("fechaFiltro").value;
       const grado = document.getElementById("gradoFiltro").value;
       const tabla = document.getElementById("tablaAsistencia");
       document.getElementById("soloAusentes").checked = false;
 
-      if (!fechaRaw || !grado) {
+      if (!fechaInput || !grado) {
         alert("Por favor seleccione una fecha y un grado.");
         return;
       }
+
+      const fecha = new Date(fechaInput);
+      const fechaFormateada = fecha.toISOString().split("T")[0];
 
       tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Cargando datos...</td></tr>`;
 
