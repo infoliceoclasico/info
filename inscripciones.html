@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscripciones</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script>
+    // Redirigir al index tras 120 segundos de inactividad
+    let timer;
+    function resetTimer() {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        window.location.href = "index.html";
+      }, 120000);
+    }
+    document.addEventListener("DOMContentLoaded", resetTimer);
+    document.addEventListener("mousemove", resetTimer);
+    document.addEventListener("keypress", resetTimer);
+    document.addEventListener("click", resetTimer);
+  </script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="imagenes/logo1.png" alt="Logo MUEBLE" class="logo">
+    </header>
+
+    <div class="tarjeta-inscripcion">
+      <h1 class="titulo-inscripcion">Proceso Inscripciones</h1>
+
+      <div class="botones-inscripcion">
+        <a href="nuevainscripcion.html" class="boton">Nueva Inscripción</a>
+        <a href="verificarreinscripcion.html" class="boton">Reinscripción</a>
+      </div>
+
+      <a href="index.html" class="boton boton-volver">Volver</a>
+    </div>
+  </div>
+</body>
+</html>

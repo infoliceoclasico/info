@@ -345,3 +345,359 @@ button.boton:hover {
   margin-left: auto;
   margin-right: auto;
 }
+
+
+/* ====================================== */
+/* ========= HORARIO DE CLASES ========= */
+/* ====================================== */
+
+
+/* Paleta accesible para todo el módulo */
+.horario{
+  --celeste:   #e8f4ff;
+  --celeste-b: #cfe8ff;
+  --verde:     #eef7f2;
+  --verde-b:   #e2efe7;
+  --amarillo:  #fff3cd;
+  --amarillo-b:#ffe39a;
+}
+
+/* Contenedor amplio */
+.horario .contenedor{
+  max-width: 1500px;
+  width: 96vw;
+  margin: 0 auto;
+}
+
+/* Encabezado con logo y título */
+.horario .header-horario{
+  display:flex; align-items:center; gap:14px; margin:18px 0 8px;
+}
+.horario .logo-colegio{ width:72px; height:72px; object-fit:contain; }
+.horario .titulo-horario{ margin:0; font-size:28px; font-weight:800; color:#2c3e50; }
+
+/* Tarjeta */
+.horario .tarjeta-horario{
+  max-width:none; margin:18px auto 30px; background:#fff;
+  padding:20px 24px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+
+/* Filtros */
+.horario .filtros-horario{
+  display:grid; grid-template-columns:1fr 1.2fr; gap:12px; align-items:end; margin-bottom:10px;
+}
+.horario .filtros-horario label{ display:block; margin-bottom:6px; font-weight:700; color:#2c3e50; }
+.horario #gradoSelect{
+  width:100%; padding:10px 12px; font-size:16px; border-radius:8px; border:1px solid #ced4da; background:#fff;
+}
+
+/* Botones iguales, con colores sutiles */
+.horario .btns-horario{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+}
+.horario .btns-horario .btn{
+  width:100%; height:44px; display:inline-flex; align-items:center; justify-content:center;
+  padding:0 14px; font-size:16px; border-radius:10px; border:0; cursor:pointer; color:#fff;
+  transition:filter .15s ease, transform .02s ease;
+}
+.horario .btn:active{ transform:translateY(1px); }
+.horario .btn-consultar{ background:#2c3e50; font-weight:600; } /* sin negrita */
+.horario .btn-hoy{        background:#3f6272; font-weight:600; }
+.horario .btn-todos{      background:#314c73; font-weight:600; }
+.horario .btn:hover{ filter:brightness(1.07); }
+
+/* Meta */
+.horario .meta-horario{ color:#2c3e50; font-size:14px; margin:6px 0 12px; opacity:.85; }
+
+/* Scroll horizontal en pantallas pequeñas */
+.horario .scroll-x{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+/* ===== Tabla cuadrícula ===== */
+.horario .tabla-horario-cuadricula{
+  width:100%; min-width:1100px; border-collapse:separate; border-spacing:0; table-layout:auto;
+  border:1px solid #e3e6ea; border-radius:10px; overflow:hidden; background:#fff;
+}
+
+/* Encabezados: días en MAYÚSCULAS, centrados; "HORA" alineado a la izquierda */
+.horario .tabla-horario-cuadricula thead th{
+  background:#2c3e50; color:#fff; padding:12px; font-size:15px; border-right:1px solid #2f4a63; white-space:nowrap;
+  text-align:center ;
+}
+.horario .tabla-horario-cuadricula thead th:not(:first-child){
+  text-transform:uppercase; letter-spacing:.3px; text-align:center;
+}
+.horario .tabla-horario-cuadricula thead th:last-child{ border-right:0; }
+
+/* Celdas base (filas más bajas) */
+.horario .tabla-horario-cuadricula tbody td{
+  border-right:1px solid #e9edf1; border-top:1px solid #e9edf1;
+  padding:8px 10px; vertical-align:middle; font-size:15px; white-space:nowrap;
+}
+.horario .tabla-horario-cuadricula tbody td:last-child{ border-right:0; }
+
+/* Columna de hora */
+.horario .hora-pill{
+  display:inline-block; font-weight:700; padding:4px 8px; border-radius:8px;
+  border:1px solid #dadfe5; background:#f3f7fb; color:#2c3e50; font-size:13px;
+}
+
+/* ===== PATRÓN DE COLORES POR FILA (cubre toda la celda, excepto columna HORA) =====
+   1 celeste | 2–3 verde | 4 amarillo | 5–6 verde | 7 amarillo | 8–9 verde | 10 celeste
+*/
+.horario .tabla-horario-cuadricula tbody tr:nth-child(1)  td:not(:first-child){ background:var(--celeste);  border-color:var(--celeste-b); }
+.horario .tabla-horario-cuadricula tbody tr:nth-child(2)  td:not(:first-child),
+.horario .tabla-horario-cuadricula tbody tr:nth-child(3)  td:not(:first-child){ background:var(--verde);    border-color:var(--verde-b); }
+.horario .tabla-horario-cuadricula tbody tr:nth-child(4)  td:not(:first-child){ background:var(--amarillo); border-color:var(--amarillo-b); }
+.horario .tabla-horario-cuadricula tbody tr:nth-child(5)  td:not(:first-child),
+.horario .tabla-horario-cuadricula tbody tr:nth-child(6)  td:not(:first-child){ background:var(--verde);    border-color:var(--verde-b); }
+.horario .tabla-horario-cuadricula tbody tr:nth-child(7)  td:not(:first-child){ background:var(--amarillo); border-color:var(--amarillo-b); }
+.horario .tabla-horario-cuadricula tbody tr:nth-child(8)  td:not(:first-child),
+.horario .tabla-horario-cuadricula tbody tr:nth-child(9)  td:not(:first-child){ background:var(--verde);    border-color:var(--verde-b); }
+.horario .tabla-horario-cuadricula tbody tr:nth-child(10) td:not(:first-child){ background:var(--celeste);  border-color:var(--celeste-b); }
+
+/* Responsive */
+@media (max-width:980px){ .horario .filtros-horario{ grid-template-columns:1fr; } }
+@media (max-width:720px){
+  .horario #gradoSelect{ width:100%; }
+  .horario .btns-horario{ grid-template-columns:1fr; } /* botones apilados en móvil */
+}
+
+
+/* ====================================== */
+/* ========== INSCRIPCIONES ============= */
+/* ====================================== */
+
+.tarjeta-inscripcion {
+  max-width: 600px;
+  margin: 20px auto;
+  background-color: white;
+  padding: 40px 30px; /* más aire dentro de la tarjeta */
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.titulo-inscripcion {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+.botones-inscripcion {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* dos columnas */
+  gap: 20px; /* espacio entre botones */
+  margin-bottom: 25px;
+}
+
+.botones-inscripcion .boton {
+  padding: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.boton-volver {
+  display: block;
+  width: 94.5%;
+  margin-top: 10px;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* ====================================== */
+/* ===== NUEVA INSCRIPCIÓN ============== */
+/* ====================================== */
+
+.tarjeta-nueva-inscripcion {
+  max-width: 1000px;
+  margin: 40px auto;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: left;
+}
+
+.titulo-nueva {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.formulario-nueva {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* dos columnas */
+  gap: 20px 30px;
+}
+
+.formulario-nueva label {
+  font-weight: bold;
+  font-size: 15px;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.formulario-nueva input,
+.formulario-nueva select {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.botones-nueva {
+  grid-column: span 2; /* ocupa toda la fila */
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+@media (max-width: 720px){
+  .formulario-nueva { grid-template-columns: 1fr; }
+}
+
+
+
+/* ====================================== */
+/* ===== BUSCADOR ALUMNOS ============== */
+/* ====================================== */
+.resultados {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-resultado {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  cursor: pointer;
+  outline: none;
+  transition: box-shadow .2s ease, border-color .2s ease, transform .02s ease;
+}
+
+.item-resultado:hover,
+.item-resultado:focus {
+  border-color: #c6ccd2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.item-resultado:active {
+  transform: scale(0.998);
+}
+
+.item-resultado .nombre {
+  font-weight: 700;
+  color: #2c3e50;
+  display: block;
+  line-height: 1.25;
+}
+
+.item-resultado .meta {
+  font-size: 13px;
+  opacity: .85;
+  margin-top: 2px;
+}
+
+.estado-busqueda {
+  font-size: 14px;
+  opacity: .9;
+  margin-top: 6px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  border: 1px solid #dadfe5;
+  background: #f3f7fb;
+  color: #2c3e50;
+  margin-left: 8px;
+}
+
+
+/* ====================================== */
+/* ===== REINSCRIPCION ============== */
+/* ====================================== */
+
+/* === MOD-REINSCRIPCIONES: lectura/edición === */
+.formulario-nueva input:disabled,
+.formulario-nueva select:disabled,
+.formulario-nueva textarea:disabled {
+  background: #f7f9fc;
+  color: #4b5563;
+  cursor: not-allowed;
+}
+
+.subbloque {
+  grid-column: span 2;
+  padding: 8px 0 0;
+  font-weight: 700;
+  color: #2c3e50;
+  border-top: 1px dashed #e5e7eb;
+  margin-top: 8px;
+}
+
+.botones-nueva .boton-secundario {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+.botones-nueva .boton-secundario:hover {
+  background: #e5e7eb;
+}
+
+.hidden { display: none !important; }
+
+
+/* === MOD-REINSCRIPCIONES: lectura/edición === */
+.formulario-nueva input:disabled,
+.formulario-nueva select:disabled,
+.formulario-nueva textarea:disabled {
+  background: #f7f9fc;
+  color: #4b5563;
+  cursor: not-allowed;
+}
+
+.subbloque {
+  grid-column: span 2;
+  padding: 8px 0 0;
+  font-weight: 700;
+  color: #2c3e50;
+  border-top: 1px dashed #e5e7eb;
+  margin-top: 8px;
+}
+
+.botones-nueva .boton-secundario {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+.botones-nueva .boton-secundario:hover {
+  background: #e5e7eb;
+}
+
+.hidden { display: none !important; }
+
+/* Select con mismo ancho que inputs (por si tu CSS no lo tenía) */
+.formulario-nueva select { width: 100%; }
+/* (ya no usamos <textarea> en dirección) */
+
+/* Selects a ancho completo (consistente con inputs) */
+.formulario-nueva select { width: 100%; }

@@ -38,9 +38,16 @@
           lista.appendChild(opcion);
         });
 
+        // Cuando el usuario selecciona un docente, muestra el correo y comienza el temporizador
         lista.addEventListener("change", function () {
           correo.textContent = `✉️ ${this.value}`;
+
+          // Inicia el temporizador de 60 segundos para regresar al index
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 60000); // 60,000 milisegundos = 60 segundos
         });
+
       } catch (err) {
         correo.textContent = "❌ Error al cargar los datos.";
         correo.style.color = "red";
@@ -51,3 +58,4 @@
   </script>
 </body>
 </html>
+

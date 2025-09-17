@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Horario de Clases</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body class="horario">
+  <div class="contenedor">
+    <!-- Logo + título (opcional: cambia la ruta del logo) -->
+    <div class="header-horario">
+      <img src="imagenes/logo1.png" alt="Logo del Colegio" class="logo-colegio" />
+      <h1 class="titulo-horario">Horario de Clases</h1>
+    </div>
+
+    <div class="tarjeta-horario">
+      <!-- Filtro y botones -->
+      <div class="filtros-horario">
+        <div>
+          <label for="gradoSelect">Seleccione un grado:</label>
+          <select id="gradoSelect">
+            <option value="" disabled selected>Seleccione…</option>
+          </select>
+        </div>
+        <div class="btns-horario">
+          <button id="btnBuscar" class="btn btn-consultar">CONSULTAR HORARIO</button>
+          <button id="btnHoy" class="btn btn-hoy">VER HOY</button>
+          <button id="btnTodos" class="btn btn-todos">VER TODOS</button>
+        </div>
+      </div>
+
+      <div id="meta" class="meta-horario"></div>
+
+      <!-- Tabla con scroll horizontal en pantallas pequeñas -->
+      <div class="scroll-x">
+        <div id="resultado"></div>
+      </div>
+    </div>
+
+    <a href="index.html" class="boton-menu">VOLVER</a>
+  </div>
+
+  <script>
+    /* ========= CONFIG ========= */
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbww7872drKXVt-NlutpI9axxVq_Hb5rFOgwEfHYc-SZiFo8v1F-NLy7eQqzM8Ph0nO6/exec';
+
+    // Etiqueta visible -> nombre exacto de la hoja (ajusta 'sheet' si difiere)
+    const GRADOS = [
+      { label: 'KINDER', sheet: 'KINDER' },
+      { label: 'PARVULOS', sheet: 'PARVULOS' },
+      { label: 'PREPARATORIA', sheet: 'PREPARATORIA' },
+      { label: '1RO PRIMARIA', sheet: '1PRI' },
+      { label: '2DO PRIMARIA', sheet: '2PRI' },
+      { label: '3RO PRIMARIA', sheet: '3PRI' },
+      { label: '4TO PRIMARIA', sheet: '4PRI' },
+      { label: '5TO PRIMARIA', sheet: '5PRI' },
+      { label: '6TO PRIMARIA', sheet: '6PRI' },
+      { label: '1RO BÁSICO', sheet: '1BAS' },
+      { label: '2DO BÁSICO', sheet: '2BAS' },
+      { label: '3RO BÁSICO', sheet: '3BAS' },
+      { label: '4TO BACHILLERATO COMPUTACIÓN', sheet: '4BAC' },
+      { label: '5TO  BACHILLERATO COMPUTACIÓN', sheet: '5BAC' },
+      { label: '4TO BACHILLERATO CIENCIAS Y LETRAS', sheet: '4CYL' },
+      { label: '5TO BACHILLERATO CIENCIAS Y LETRAS', sheet: '5CYL' },
+      { label: '4TO BACHILLERAOT EN DIBUJO TÉCNICO', sheet: '4DIB' },
+      { label: '5TO BACHILLRATO EN DIBUJO TÉCNICO', sheet: '5DIB' },
+      { label: '4TO PERITO CONTADOR', sheet: '4PC' },
+      { label: '5TO PERITO CONTADOR', sheet: '5PC' },
+      { label: '6TO PERITO CONTADOR', sheet: '6PC' },
+      { label: '4TO PERITO ADMINISTRACIÓN', sheet: '4PAE' },
+      { label: '5TO PERITO ADMINISTRACIÓN', sheet: '5PAE' },
+      { label: '6TO PERITO ADMINISTRACIÓN', sheet: '6PAE' }
+    ];
+
+    /* ========= UTIL ========= */
+    const $ = s => document.querySelector(s);
+    const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+    const titleCase = s => String(s||'').toLowerCase()
+      .replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase())
+      .replace('Miercoles','Miércoles');
+
+    function poblarGrados(){
+      const sel = $('#gradoSelect');
+      GRADOS.forEach(g=>{
+        const opt = document.createElement('option');
+        opt.value = g.sheet; opt.textContent = g.label;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function fetchJSON(url){
+      const r = await fetch(url + (url.includes('?')?'&':'?') + '_=' + Date.now());
+      return r.json();
+    }
+
+    /* Índice clave "DIA|HORA" -> CURSO */
+    function indexar(items){
+      const map = new Map();
+      items.forEach(it=>{
+        const dia = norm(it.DIA);
+        const hora = String(it.HORA || (it.HORA_INICIO && it.HORA_FIN ? `${it.HORA_INICIO} a ${it.HORA_FIN}` : '')).trim();
+        map.set(`${dia}|${hora}`, String(it.CURSO||''));
+      });
+      return map;
+    }
+
+    /* Lista única de horas, ordenadas por inicio */
+    function horasUnicas(items){
+      const set = new Set();
+      items.forEach(it=>{
+        const h = String(it.HORA || (it.HORA_INICIO && it.HORA_FIN ? `${it.HORA_INICIO} a ${it.HORA_FIN}` : '')).trim();
+        if (h) set.add(h);
+      });
+      const arr = Array.from(set);
+      const toMin = h => {
+        const m = h.match(/(\d{1,2}):(\d{2})/);
+        if (!m) return 0;
+        return parseInt(m[1],10)*60 + parseInt(m[2],10);
+      };
+      arr.sort((a,b)=> toMin(a) - toMin(b));
+      return arr;
+    }
+
+    /* Render: tabla cuadrícula (días columnas, horas filas). */
+    function renderCuadricula(dias, items, soloDia=null){
+      const cont = $('#resultado');
+      const meta = $('#meta');
+
+      if (!items || !items.length){
+        cont.innerHTML = '<div class="msj-horario">No hay clases para el filtro seleccionado.</div>';
+        meta.textContent = '';
+        return;
+      }
+
+      const idx = indexar(items);
+      const horas = horasUnicas(items);
+
+      let diasMostrar = (dias && dias.length ? dias : ['Lunes','Martes','Miércoles','Jueves','Viernes']).slice();
+      if (soloDia){
+        const nSolo = norm(soloDia);
+        diasMostrar = diasMostrar.filter(d => norm(d) === nSolo);
+      }
+
+      // Encabezado centrado y en mayúsculas (CSS lo hace)
+      let thead = `<thead><tr><th style="width: 180px">HORA</th>${
+        diasMostrar.map(d => `<th>${titleCase(d)}</th>`).join('')
+      }</tr></thead>`;
+
+      // Cuerpo
+      let tbody = '<tbody>';
+      horas.forEach(h=>{
+        tbody += `<tr><td><span class="hora-pill">${h}</span></td>`;
+        diasMostrar.forEach(d=>{
+          const key = `${norm(d)}|${h}`;
+          const txt = idx.get(key) || '';
+          tbody += `<td>${txt || ''}</td>`;
+        });
+        tbody += `</tr>`;
+      });
+      tbody += '</tbody>';
+
+      cont.innerHTML = `<table class="tabla-horario-cuadricula">${thead}${tbody}</table>`;
+      meta.textContent = `Clases encontradas: ${items.length}${soloDia ? ' (solo '+titleCase(soloDia)+')' : ''}.`;
+    }
+
+    /* ========= ACCIONES ========= */
+    let cacheDias = [];
+    let cacheItems = [];
+
+    async function consultar(){
+      const sheet = $('#gradoSelect').value;
+      if (!sheet){ alert('Seleccione un grado'); return; }
+      const data = await fetchJSON(`${API_BASE}?grado=${encodeURIComponent(sheet)}`);
+      if (!data.ok){
+        $('#resultado').innerHTML = `<div class="msj-horario">Error: ${data.error || 'No se pudieron obtener datos.'}</div>`;
+        $('#meta').textContent = '';
+        return;
+      }
+      cacheDias = data.dias || ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+      cacheItems = data.items || [];
+      renderCuadricula(cacheDias, cacheItems, null);
+    }
+
+    function verHoy(){
+      if (!cacheItems.length){ consultar().then(verHoy); return; }
+      const d = new Date().getDay(); // 0=Domingo
+      const nombre = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][d];
+      renderCuadricula(cacheDias, cacheItems, nombre);
+    }
+    function verTodos(){
+      if (!cacheItems.length){ consultar(); return; }
+      renderCuadricula(cacheDias, cacheItems, null);
+    }
+
+    /* ========= INIT ========= */
+    poblarGrados();
+    $('#btnBuscar').addEventListener('click', consultar);
+    $('#btnHoy').addEventListener('click', verHoy);
+    $('#btnTodos').addEventListener('click', verTodos);
+
+ /* ===== AUTO-REGRESO 60s ===== */
+    setTimeout(() => { window.location.href = 'index.html'; }, 90000);
+
+  </script>
+</body>
+</html>

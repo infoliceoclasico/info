@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reinscripción 2026</title>
+  <link rel="stylesheet" href="estilos.css"/>
+
+  <script>
+    // ---------------------------
+    //  Inactividad: 120 s → index
+    // ---------------------------
+    let __idleTimer;
+    function resetIdle(){ clearTimeout(__idleTimer); __idleTimer=setTimeout(()=> (window.location.href="index.html"), 120000); }
+    ["mousemove","keypress","click","touchstart"].forEach(e=>document.addEventListener(e, resetIdle));
+
+    // ---------------------------
+    //  APIs
+    // ---------------------------
+    // Web App PRINCIPAL (buscar/detalle/guardar en REINSCRIPCIONES)
+    const API = "https://script.google.com/macros/s/AKfycbye7HeuGh6O1VDb9Y_ub1OflO8ck5n-qc_5lsCngc9GwpxUCCrq0XlnzNOU29wxAeA4Sg/exec";
+    // Web App SOLOCONFIRMAR (insertar en DATOS)
+    const API_DATOS = "https://script.google.com/macros/s/AKfycbyIjSjmXvq4slIPfJsaVq3qxKiB-1sU4oyuZS4xCslf-E0xWNJKaqv0a9GNgBNoZYmRPA/exec";
+
+    // id ↔ encabezado en la hoja REINSCRIPCIONES
+    const MAP = {
+      fecha: "FECHA",
+      datos_por: "DATOS TOMADOS POR",
+      proceso_realizar: "PROCESO A REALIZAR",
+
+      ape_titular: "APELLIDOS DEL PADRE, MADRE DE FAMILIA O ENCARGADO TITULAR",
+      nom_titular: "NOMBRES DEL PADRE, MADRE DE FAMILIA O ENCARGADO TITULAR",
+      dpi: "NO. DPI",
+      nac_titular: "FECHA DE NACIMIENTO",
+      edad_titular: "EDAD ACTUAL",
+      parentesco: "PARENTESCO",
+      estado_civil: "ESTADO CIVIL",
+      direccion: "DIRECCIÓN DE RESIDENCIA",
+      tel_resid: "TELÉFONO RESIDENCIAL",
+      tel_pers: "TELÉFONO PERSONAL",
+      correo: "CORREO ELECTRÓNICO",
+      ocupacion: "OCUPACIÓN, PROFESIÓN U OFICIO",
+      lugar_trab: "LUGAR DE TRABAJO",
+      tel_trab: "TELÉFONO DE TRABAJO",
+
+      ape_alumno: "APELLIDOS DEL ALUMNO",
+      nom_alumno: "NOMBRE DEL ALUMNO",
+      nac_alumno: "FECHA DE NACIMIENTO (ALUMNO)",
+      edad_alumno: "EDAD ACTUAL (ALUMNO)",
+      jornada: "JORNADA DEL ALUMNO",
+      grado_2026: "GRADO A CURSAR EN 2026",
+
+      em1_nombre: "EN CASO DE EMERGENCIA EL NOMBRE DE UN 1ER. CONTACTO",
+      em1_parentesco: "EN CASO DE EMERGENCIA EL PARENTESCO DE UN 1ER. CONTACTO",
+      em1_telefono: "EN CASO DE EMERGENCIA EL TELÉFONO DE UN 1ER. CONTACTO",
+      em2_nombre: "EN CASO DE EMERGENCIA EL NOMBRE DE UN 2DO. CONTACTO",
+      em2_parentesco: "EN CASO DE EMERGENCIA EL PARENTESCO DE UN 2DO. CONTACTO",
+      em2_telefono: "EN CASO DE EMERGENCIA EL TELÉFONO DE UN 2DO. CONTACTO",
+    };
+
+    const REQUERIDOS = [
+      "fecha","datos_por","proceso_realizar",
+      "ape_titular","nom_titular","dpi","nac_titular","parentesco","estado_civil",
+      "direccion","tel_pers","correo",
+      "ape_alumno","nom_alumno","nac_alumno","jornada","grado_2026",
+      "em1_nombre","em1_telefono"
+    ];
+
+    // Grados dependientes
+    const GRADOS_BY_JORNADA = {
+      "Matutina": [
+        "Kinder","Párvulos","Preparatoria",
+        "1ro. Primaria","2do. Primaria","3ro. Primaria","4to. Primaria","5to. Primaria","6to. Primaria",
+        "1ro. Básico","2do. Básico","3ro. Básico",
+        "4to. Bachillerato en Ciencias y Letras","5to. Bachillerato en Ciencias y Letras",
+        "4to. Bachillerato en Computación","5to. Bachillerato en Computación",
+        "4to. Bachillerato en Dibujo Técnico","5to. Bachillerato en Dibujo Técnico",
+        "4to. Perito Contador","5to. Perito Contador","6to. Perito Contador",
+        "4to. Perito en Administración de Empresas","5to. Perito en Administración de Empresas","6to. Perito en Administración de Empresas"
+      ],
+      "Sabatina": [
+        "1ro. Básico","2do. Básico","3ro. Básico",
+        "4to. Bachillerato en Ciencias y Letras","5to. Bachillerato en Ciencias y Letras",
+        "4to. Bachillerato en Computación","5to. Bachillerato en Computación",
+        "4to. Perito Contador","5to. Perito Contador","6to. Perito Contador",
+        "4to. Perito en Administración de Empresas","5to. Perito en Administración de Empresas","6to. Perito en Administración de Empresas",
+        "1ro. Básico Madurez","3ro. Básico Madurez","Bachillerato por Madurez"
+      ]
+    };
+
+    // ---------------------------
+    //  Utils
+    // ---------------------------
+    const onlyDigits = s => String(s||"").replace(/\D+/g,"");
+    function calcAge(iso){
+      const d = new Date(iso); if (isNaN(d)) return "";
+      const t = new Date(); let a = t.getFullYear()-d.getFullYear();
+      const m = t.getMonth()-d.getMonth();
+      if (m<0 || (m===0 && t.getDate()<d.getDate())) a--;
+      return String(Math.max(0,a));
+    }
+    function setAllDisabled(disabled){
+      document.querySelectorAll(".formulario-nueva input, .formulario-nueva select, .formulario-nueva textarea")
+        .forEach(el => el.disabled = disabled);
+    }
+    function setBtnSaving(btn, saving, text="Guardando…"){
+      if (!btn) return;
+      if (saving){ btn.dataset._txt = btn.textContent; btn.textContent = text; btn.disabled = true; }
+      else { btn.textContent = btn.dataset._txt || btn.textContent; btn.disabled = false; }
+    }
+    function todayYYYYMMDD(){
+      const d=new Date();
+      const mm=String(d.getMonth()+1).padStart(2,'0');
+      const dd=String(d.getDate()).padStart(2,'0');
+      return `${d.getFullYear()}-${mm}-${dd}`;
+    }
+    function toYYYYMMDD(v){
+      if (!v && v!==0) return "";
+      if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v)) {
+        const yy=v.getFullYear(), mm=String(v.getMonth()+1).padStart(2,'0'), dd=String(v.getDate()).padStart(2,'0');
+        return `${yy}-${mm}-${dd}`;
+      }
+      const s = String(v).trim();
+      let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/); // dd/mm/yyyy
+      if (m){ const dd=m[1].padStart(2,'0'), mm=m[2].padStart(2,'0'), yy=m[3]; return `${yy}-${mm}-${dd}`; }
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (m) return s; // ok
+      const d = new Date(s); if (!isNaN(d)){
+        const yy=d.getFullYear(), mm2=String(d.getMonth()+1).padStart(2,'0'), dd2=String(d.getDate()).padStart(2,'0');
+        return `${yy}-${mm2}-${dd2}`;
+      }
+      return "";
+    }
+
+    // Title Case español con conectores
+    const CONNECTORS = new Set(["de","del","la","las","el","los","y","o","u","a","al","en"]);
+    function toTitleCaseEs(s){
+      return String(s||"").toLowerCase().replace(/\S+/g, w=>{
+        const wPlain = w.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+        if (CONNECTORS.has(wPlain)) return w;
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      });
+    }
+    // Normalizar campos de texto
+    function normalizeTextFields(){
+      const tcIds = [
+        "datos_por","proceso_realizar","ape_titular","nom_titular","direccion",
+        "ocupacion","lugar_trab","ape_alumno","nom_alumno","em1_nombre",
+        "em1_parentesco","em2_nombre","em2_parentesco"
+      ];
+      tcIds.forEach(id=>{
+        const el=document.getElementById(id);
+        if (el && el.value) el.value = toTitleCaseEs(el.value.trim());
+      });
+      const email=document.getElementById("correo");
+      if (email && email.value) email.value = email.value.trim().toLowerCase();
+      ["dpi","tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"].forEach(id=>{
+        const el=document.getElementById(id); if (el && el.value) el.value = onlyDigits(el.value);
+      });
+    }
+
+    function populateGrados(jornada, selected){
+      const sel = document.getElementById("grado_2026");
+      sel.innerHTML = "";
+      const d = document.createElement("option"); d.value=""; d.textContent="— Seleccione un grado —";
+      sel.appendChild(d);
+      const list = GRADOS_BY_JORNADA[jornada] || [];
+      list.forEach(g=>{ const o=document.createElement("option"); o.value=g; o.textContent=g; sel.appendChild(o); });
+      if (selected && list.includes(selected)) sel.value = selected;
+    }
+    function getVal(id){ const el=document.getElementById(id); return el ? (el.value||'').trim() : ''; }
+
+    // ---------------------------
+    //  Estado
+    // ---------------------------
+    let gFila = null;
+    let isEdit = false;
+    let inFlight = false;
+
+    // ---------------------------
+    //  Hidratar (modo lectura)
+    // ---------------------------
+    function hydrateForm(row){
+      const jornadaEl = document.getElementById("jornada");
+      const jornadaVal = row[MAP.jornada] ?? "";
+      if (jornadaEl) jornadaEl.value = jornadaVal || "";
+
+      const gradoEl = document.getElementById("grado_2026");
+      const gradoVal = row[MAP.grado_2026] ?? "";
+      gradoEl.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = gradoVal; opt.textContent = gradoVal || "—";
+      gradoEl.appendChild(opt);
+      gradoEl.value = gradoVal;
+
+      Object.entries(MAP).forEach(([id, header]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = row[header] ?? "";
+        if (id === "fecha" || id === "nac_titular" || id === "nac_alumno"){
+          el.value = toYYYYMMDD(val);
+        } else {
+          el.value = val;
+        }
+      });
+
+      const et = document.getElementById("edad_titular");
+      const ea = document.getElementById("edad_alumno");
+      const nt = document.getElementById("nac_titular");
+      const na = document.getElementById("nac_alumno");
+      if (et && nt && !et.value) et.value = calcAge(nt.value);
+      if (ea && na && !ea.value) ea.value = calcAge(na.value);
+    }
+
+    // ---------------------------
+    //  Recolectar & validar
+    // ---------------------------
+    function gatherForm(){
+      const out = {};
+      Object.entries(MAP).forEach(([id, header]) => {
+        const el = document.getElementById(id);
+        if (el) out[header] = el.value?.trim?.() ?? "";
+      });
+      return out;
+    }
+
+    function validar(){
+      const dpi = document.getElementById("dpi");
+      if (dpi) dpi.value = onlyDigits(dpi.value);
+
+      ["tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"].forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.value = onlyDigits(el.value);
+      });
+
+      for (const id of ["tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"]){
+        const el = document.getElementById(id);
+        if (el && el.value && el.value.length < 8){
+          el.setCustomValidity("Debe contener al menos 8 dígitos.");
+          el.reportValidity(); el.focus(); return false;
+        } else if (el){ el.setCustomValidity(""); }
+      }
+
+      const correo = document.getElementById("correo");
+      if (correo){
+        const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo.value);
+        if (!ok){ correo.setCustomValidity("Ingrese un correo válido."); correo.reportValidity(); correo.focus(); return false; }
+        else { correo.setCustomValidity(""); }
+      }
+
+      for (const id of REQUERIDOS){
+        const el = document.getElementById(id);
+        if (el && !String(el.value).trim()){
+          el.setCustomValidity("Campo requerido."); el.reportValidity(); el.focus(); return false;
+        } else if (el){ el.setCustomValidity(""); }
+      }
+      return true;
+    }
+
+    function wireHelpers(){
+      const nt = document.getElementById("nac_titular");
+      const na = document.getElementById("nac_alumno");
+      if (nt){ nt.addEventListener("change", ()=> { const et = document.getElementById("edad_titular"); if (et) et.value = calcAge(nt.value); }); }
+      if (na){ na.addEventListener("change", ()=> { const ea = document.getElementById("edad_alumno"); if (ea) ea.value = calcAge(na.value); }); }
+      ["dpi","tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"].forEach(id=>{
+        const el = document.getElementById(id); if (el) el.addEventListener("input", ()=> el.value = onlyDigits(el.value));
+      });
+
+      const jornadaEl = document.getElementById("jornada");
+      if (jornadaEl){
+        jornadaEl.addEventListener("change", (e)=> {
+          if (!isEdit) return;
+          populateGrados(e.target.value || "Matutina", null);
+        });
+      }
+    }
+
+    // ---------------------------
+    //  Cargar detalle con ping
+    // ---------------------------
+    document.addEventListener("DOMContentLoaded", async () => {
+      resetIdle();
+
+      try {
+        const rping = await fetch(`${API}?mod=ping`, { cache: "no-store" });
+        if (!rping.ok) throw new Error(`HTTP ${rping.status}`);
+        const j = await rping.json();
+        if (!j || j.ok !== true) throw new Error("Ping sin ok:true");
+      } catch (e) {
+        alert("No se pudo conectar con el servidor (posible CORS/permisos). Verifica la App Web.");
+        window.location.href = "verificarreinscripcion.html";
+        return;
+      }
+
+      let sel = null;
+      try { sel = JSON.parse(sessionStorage.getItem("reinscripcionSeleccion") || "null"); } catch {}
+      if (!sel || (!sel.fila && !sel.codigo)){
+        alert("Seleccione primero un alumno."); window.location.href = "verificarreinscripcion.html"; return;
+      }
+
+      try{
+        const qs = sel.fila ? `fila=${encodeURIComponent(sel.fila)}` : `codigo=${encodeURIComponent(sel.codigo)}`;
+        const urlDetalle = `${API}?mod=reinscripcion_detalle&${qs}`;
+        const resp = await fetch(urlDetalle, { cache: "no-store" });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || "Error de servidor");
+        gFila = data.fila;
+        hydrateForm(data.row || {});
+      } catch(err){
+        alert("No se pudo cargar la información: " + err.message);
+        window.location.href = "verificarreinscripcion.html";
+        return;
+      }
+
+      setAllDisabled(true);
+      document.getElementById("btnModificar").disabled = false;
+      document.getElementById("btnCancelar").disabled = false;
+
+      wireHelpers();
+    });
+
+    // ---------------------------
+    //  Acciones
+    // ---------------------------
+    function onModificar(){
+      isEdit = true;
+      setAllDisabled(false);
+
+      const j = (document.getElementById("jornada").value || "Matutina").trim();
+      const gActual = document.getElementById("grado_2026").value || "";
+      populateGrados(j, gActual);
+
+      document.getElementById("btnGuardar").classList.remove("hidden");
+      document.getElementById("fecha").focus();
+    }
+
+    async function onGuardar(){
+      if (inFlight) return;
+      if (!gFila){ alert("Fila no válida."); return; }
+
+      normalizeTextFields();
+      if (!validar()) return;
+
+      const btn = document.getElementById("btnGuardar");
+      setBtnSaving(btn, true, "Guardando…");
+      setAllDisabled(true);
+      inFlight = true;
+
+      const payload = { fila: gFila, data: gatherForm(), accion: "guardar" };
+
+      try{
+        const resp = await fetch(`${API}?mod=reinscripcion_guardar`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify(payload)
+        });
+        const out = await resp.json();
+        if (!resp.ok || !out.ok) throw new Error(out.error || `HTTP ${resp.status}`);
+
+        alert("Cambios guardados.");
+        setAllDisabled(true);
+        isEdit = false;
+        document.getElementById("btnGuardar").classList.add("hidden");
+
+      } catch(err){
+        const msg = /Failed to fetch|TypeError/i.test(String(err))
+          ? "No se pudo contactar al servidor (CORS/permisos). Verifica la App Web."
+          : String(err.message || err);
+        alert("Error al guardar: " + msg);
+        setAllDisabled(false);
+      } finally {
+        setBtnSaving(btn, false);
+        inFlight = false;
+      }
+    }
+
+    function genIdem(){
+      try { if (crypto && crypto.randomUUID) return crypto.randomUUID(); } catch{}
+      return 'idem-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    }
+
+    async function onConfirmar(){
+      if (inFlight) return;
+      if (!confirm("¿Está todo correcto y SEGURO de CONFIRMAR la reinscripción?\nSe trasladará a la hoja DATOS.")) return;
+
+      const f = document.getElementById("fecha");
+      if (f && !f.value) f.value = todayYYYYMMDD();
+
+      normalizeTextFields();
+      if (!validar()) return;
+
+      const btn = document.getElementById("btnConfirmar");
+      setBtnSaving(btn, true, "Confirmando…");
+      setAllDisabled(true);
+      inFlight = true;
+
+      const idem = genIdem(); // idempotencia
+
+      const params = {
+        idem, // ← clave idempotente
+        fechaRegistro: getVal("fecha"),
+        tomaDatos: getVal("datos_por"),
+        proceso: getVal("proceso_realizar"),
+        entrevista: "Excent@",
+        apellidosEncargado: getVal("ape_titular"),
+        nombresEncargado:  getVal("nom_titular"),
+        dpi: getVal("dpi"),
+        nacimientoEncargado: getVal("nac_titular"),
+        edadEncargado: getVal("edad_titular"),
+        parentesco: getVal("parentesco"),
+        estadoCivil: getVal("estado_civil"),
+        direccion: getVal("direccion"),
+        telResidencial: getVal("tel_resid"),
+        telPersonal: getVal("tel_pers"),
+        correo: getVal("correo"),
+        ocupacion: getVal("ocupacion"),
+        lugarTrabajo: getVal("lugar_trab"),
+        telTrabajo: getVal("tel_trab"),
+        apellidosAlumno: getVal("ape_alumno"),
+        nombresAlumno: getVal("nom_alumno"),
+        nacimientoAlumno: getVal("nac_alumno"),
+        edadAlumno: getVal("edad_alumno"),
+        jornada: getVal("jornada"),
+        grado2026: getVal("grado_2026"),
+        contacto1: getVal("em1_nombre"),
+        parentesco1: getVal("em1_parentesco"),
+        telContacto1: getVal("em1_telefono"),
+        contacto2: getVal("em2_nombre"),
+        parentesco2: getVal("em2_parentesco"),
+        telContacto2: getVal("em2_telefono")
+      };
+
+      try{
+        const resp = await fetch(API_DATOS, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body: new URLSearchParams(params).toString()
+        });
+
+        const txt = await resp.text();
+        let out = {};
+        try { out = JSON.parse(txt); } catch(_){
+          const m = String(txt).match(/OK\s*fila\s*(\d+)/i);
+          if (m) out = { ok:true, row: parseInt(m[1],10) };
+          else   out = { ok:false, error: txt };
+        }
+
+        // Manejo especial DUPLICADO
+        if (!out.ok && out.error === 'DUPLICADO' && out.row){
+          alert(`Ya existe un registro para ese alumno en DATOS (fila ${out.row}). No se insertó duplicado.`);
+          setAllDisabled(false);
+          return;
+        }
+
+        if (!resp.ok || !out.ok){
+          const errMsg = out.error || `HTTP ${resp.status}`;
+          throw new Error(errMsg);
+        }
+
+        alert(`¡Traslado a DATOS exitoso! (fila ${out.row})`);
+        try { sessionStorage.removeItem("reinscripcionSeleccion"); } catch {}
+        window.location.href = "index.html";
+
+      } catch(err){
+        const msg = /Failed to fetch|TypeError/i.test(String(err))
+          ? "No se pudo contactar al servidor (CORS/permisos). Verifica la App Web de DATOS."
+          : String(err && err.message ? err.message : err);
+        alert("Error al confirmar: " + msg);
+        setAllDisabled(false);
+      } finally {
+        setBtnSaving(btn, false);
+        inFlight = false;
+      }
+    }
+
+    function onCancelar(){ window.location.href = "index.html"; }
+
+    window.onModificar = onModificar;
+    window.onGuardar   = onGuardar;
+    window.onConfirmar = onConfirmar;
+    window.onCancelar  = onCancelar;
+  </script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="imagenes/logo1.png" alt="Logo" class="logo"/>
+    </header>
+
+    <div class="tarjeta-nueva-inscripcion">
+      <h1 class="titulo-nueva">Reinscripción 2026</h1>
+
+      <form id="form-reins" class="formulario-nueva" onsubmit="return false;" novalidate>
+
+        <div class="subbloque">Datos generales</div>
+        <div>
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" required>
+        </div>
+        <div>
+          <label for="datos_por">Datos tomados por</label>
+          <input type="text" id="datos_por" required>
+        </div>
+        <div>
+          <label for="proceso_realizar">Proceso a realizar</label>
+          <input type="text" id="proceso_realizar" required>
+        </div>
+
+        <div class="subbloque">Titular (Padre/Madre/Encargado)</div>
+        <div>
+          <label for="ape_titular">Apellidos</label>
+          <input type="text" id="ape_titular" required>
+        </div>
+        <div>
+          <label for="nom_titular">Nombres</label>
+          <input type="text" id="nom_titular" required>
+        </div>
+        <div>
+          <label for="dpi">No. DPI</label>
+          <input type="text" id="dpi" inputmode="numeric" placeholder="Solo dígitos" required>
+        </div>
+        <div>
+          <label for="nac_titular">Fecha de nacimiento</label>
+          <input type="date" id="nac_titular" required>
+        </div>
+        <div>
+          <label for="edad_titular">Edad actual</label>
+          <input type="text" id="edad_titular" inputmode="numeric" placeholder="Auto">
+        </div>
+        <div>
+          <label for="parentesco">Parentesco</label>
+          <select id="parentesco" required>
+            <option value="">— Seleccione —</option>
+            <option>Madre</option>
+            <option>Padre</option>
+            <option>Hermano(a)</option>
+            <option>Tío(a)</option>
+            <option>Abuelo(a)</option>
+            <option>Encargado(a)</option>
+            <option>Primo(a)</option>
+            <option>Mismo Alumno(a)</option>
+          </select>
+        </div>
+        <div>
+          <label for="estado_civil">Estado civil</label>
+          <select id="estado_civil" required>
+            <option value="">— Seleccione —</option>
+            <option>Soltero(a)</option>
+            <option>Casado(a)</option>
+            <option>Divorciado(a)</option>
+            <option>Viudo(a)</option>
+          </select>
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="direccion">Dirección de residencia</label>
+          <input type="text" id="direccion" required>
+        </div>
+        <div>
+          <label for="tel_resid">Teléfono residencial</label>
+          <input type="text" id="tel_resid" inputmode="numeric" placeholder="Opcional">
+        </div>
+        <div>
+          <label for="tel_pers">Teléfono personal</label>
+          <input type="text" id="tel_pers" inputmode="numeric" required>
+        </div>
+        <div>
+          <label for="correo">Correo electrónico</label>
+          <input type="email" id="correo" required>
+        </div>
+        <div>
+          <label for="ocupacion">Ocupación / Profesión / Oficio</label>
+          <input type="text" id="ocupacion">
+        </div>
+        <div>
+          <label for="lugar_trab">Lugar de trabajo</label>
+          <input type="text" id="lugar_trab">
+        </div>
+        <div>
+          <label for="tel_trab">Teléfono de trabajo</label>
+          <input type="text" id="tel_trab" inputmode="numeric" placeholder="Opcional">
+        </div>
+
+        <div class="subbloque">Alumno</div>
+        <div>
+          <label for="ape_alumno">Apellidos del alumno</label>
+          <input type="text" id="ape_alumno" required>
+        </div>
+        <div>
+          <label for="nom_alumno">Nombre del alumno</label>
+          <input type="text" id="nom_alumno" required>
+        </div>
+        <div>
+          <label for="nac_alumno">Fecha de nacimiento (alumno)</label>
+          <input type="date" id="nac_alumno" required>
+        </div>
+        <div>
+          <label for="edad_alumno">Edad actual (alumno)</label>
+          <input type="text" id="edad_alumno" inputmode="numeric" placeholder="Auto">
+        </div>
+        <div>
+          <label for="jornada">Jornada del alumno</label>
+          <select id="jornada" required>
+            <option value="">— Seleccione jornada —</option>
+            <option>Matutina</option>
+            <option>Sabatina</option>
+          </select>
+        </div>
+        <div>
+          <label for="grado_2026">Grado a cursar en 2026</label>
+          <select id="grado_2026" required>
+            <option value="">—</option>
+          </select>
+        </div>
+
+        <div class="subbloque">Contactos de emergencia</div>
+        <div>
+          <label for="em1_nombre">1er. contacto - Nombre</label>
+          <input type="text" id="em1_nombre" required>
+        </div>
+        <div>
+          <label for="em1_parentesco">1er. contacto - Parentesco</label>
+          <input type="text" id="em1_parentesco">
+        </div>
+        <div>
+          <label for="em1_telefono">1er. contacto - Teléfono</label>
+          <input type="text" id="em1_telefono" inputmode="numeric" required>
+        </div>
+        <div>
+          <label for="em2_nombre">2do. contacto - Nombre</label>
+          <input type="text" id="em2_nombre">
+        </div>
+        <div>
+          <label for="em2_parentesco">2do. contacto - Parentesco</label>
+          <input type="text" id="em2_parentesco">
+        </div>
+        <div>
+          <label for="em2_telefono">2do. contacto - Teléfono</label>
+          <input type="text" id="em2_telefono" inputmode="numeric">
+        </div>
+
+        <div class="botones-nueva" style="grid-column: span 2;">
+          <button type="button" class="boton" id="btnModificar" onclick="onModificar()">Modificar</button>
+          <button type="button" class="boton hidden" id="btnGuardar" onclick="onGuardar()">Guardar</button>
+          <button type="button" class="boton" id="btnConfirmar" onclick="onConfirmar()">Confirmar</button>
+          <button type="button" class="boton boton-secundario" id="btnCancelar" onclick="onCancelar()">Cancelar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</body>
+</html>

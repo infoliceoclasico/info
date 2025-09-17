@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verificar Reinscripción 2026</title>
+  <link rel="stylesheet" href="estilos.css"/>
+
+  <script>
+    // Inactividad 120s → index.html
+    let __idleTimer;
+    function resetIdle() {
+      clearTimeout(__idleTimer);
+      __idleTimer = setTimeout(() => (window.location.href = "index.html"), 120000);
+    }
+    ["mousemove","keypress","click","touchstart"].forEach(evt =>
+      document.addEventListener(evt, resetIdle)
+    );
+
+    // API única (buscar/detalle/guardar)
+    const API = "https://script.google.com/macros/s/AKfycbye7HeuGh6O1VDb9Y_ub1OflO8ck5n-qc_5lsCngc9GwpxUCCrq0XlnzNOU29wxAeA4Sg/exec";
+    try { localStorage.setItem('API_REINS', API); } catch {}
+
+    // Debounce
+    function debounce(fn, delay=280){
+      let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), delay); };
+    }
+
+    // Resaltar coincidencias
+    function highlight(text, query){
+      if (!query) return text;
+      try {
+        const esc = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(esc, "ig");
+        return text.replace(re, m => `**${m}**`);
+      } catch { return text; }
+    }
+    function renderHighlighted(container, text){
+      const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
+      parts.forEach(p => {
+        if (p.startsWith("**") && p.endsWith("**")){
+          const s = document.createElement('strong');
+          s.textContent = p.slice(2, -2);
+          container.appendChild(s);
+        } else {
+          container.appendChild(document.createTextNode(p));
+        }
+      });
+    }
+
+    // Normalizar ítem
+    function normalizarItem(raw){
+      const obj = typeof raw === 'object' && raw ? raw : {};
+      return {
+        fila: obj.fila ?? obj.row ?? "",
+        codigo: obj.codigo ?? obj.CODIGO ?? obj.code ?? "",
+        nombre: obj.nombre ?? obj.NOMBRE ?? obj.AL ?? obj.fullname ?? "",
+        jornada: obj.jornada ?? obj.JORNADA ?? "",
+        gradoActual: obj.gradoActual ?? obj.GRADO_ACTUAL ?? obj.grado ?? ""
+      };
+    }
+
+    let lastController = null;
+
+    async function buscar(q){
+      const estado = document.getElementById('estado');
+      const cont = document.getElementById('resultados');
+      cont.innerHTML = '';
+
+      const query = String(q || '').trim();
+      if (query.length < 2){
+        estado.textContent = "Escriba al menos 2 caracteres para buscar.";
+        return;
+      }
+      if (!navigator.onLine){
+        estado.textContent = "Sin conexión a internet.";
+        return;
+      }
+
+      if (lastController) lastController.abort();
+      lastController = new AbortController();
+
+      estado.textContent = "Buscando…";
+
+      try {
+        const url = `${API}?mod=reinscripcion_buscar&q=${encodeURIComponent(query)}&limit=25`;
+        const resp = await fetch(url, { signal: lastController.signal });
+        const data = await resp.json().catch(()=>({ ok:false, items:[] }));
+
+        const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+        const normalizados = items.map(normalizarItem).filter(x=>x.nombre);
+
+        if (!normalizados.length){
+          estado.textContent = "Sin coincidencias. Intente con otro nombre o apellido.";
+          return;
+        }
+
+        estado.textContent = `${normalizados.length} resultado(s).`;
+
+        normalizados.forEach((it) => {
+          const card = document.createElement('div');
+          card.className = 'item-resultado';
+          card.tabIndex = 0;
+          card.setAttribute('role', 'button');
+
+          const nombre = document.createElement('span');
+          nombre.className = 'nombre';
+          renderHighlighted(nombre, highlight(it.nombre, query));
+
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = `Código: ${it.codigo || '—'}`;
+
+          const pills = document.createElement('span');
+          pills.className = 'pill';
+          pills.textContent = [it.jornada, it.gradoActual].filter(Boolean).join(' · ') || '—';
+
+          meta.appendChild(pills);
+          card.appendChild(nombre);
+          card.appendChild(meta);
+
+          card.addEventListener('click', () => seleccionarAlumno(it));
+          card.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' '){
+              ev.preventDefault(); seleccionarAlumno(it);
+            }
+          });
+
+          cont.appendChild(card);
+        });
+      } catch (err){
+        estado.textContent = `Error al consultar: ${err.message}`;
+      }
+    }
+
+    const debouncedBuscar = debounce(buscar, 280);
+
+    function seleccionarAlumno(item){
+      try { sessionStorage.setItem('reinscripcionSeleccion', JSON.stringify(item)); } catch {}
+      window.location.href = 'reinscripcion.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      resetIdle();
+      const input = document.getElementById('q');
+      input.addEventListener('input', (e)=> debouncedBuscar(e.target.value));
+      input.focus();
+    });
+  </script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="imagenes/logo1.png" alt="Logo" class="logo"/>
+    </header>
+
+    <div class="tarjeta-nueva-inscripcion">
+      <h1 class="titulo-nueva">Verificar Reinscripción 2026</h1>
+
+      <form class="formulario-nueva" onsubmit="return false;" novalidate>
+        <div style="grid-column: span 2;">
+          <label for="q">Buscar alumno (nombre o apellido):</label>
+          <input type="text" id="q" name="q" placeholder="Empiece a escribir el nombre o apellido…" autocomplete="off" required>
+          <div class="estado-busqueda" id="estado">Escriba al menos 2 caracteres para buscar.</div>
+        </div>
+
+        <div id="resultados" class="resultados" style="grid-column: span 2;"></div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

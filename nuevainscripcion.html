@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nueva Inscripción</title>
+  <link rel="stylesheet" href="estilos.css"/>
+
+  <script>
+    // -------------------------------
+    //  Inactividad: volver a index en 120 s
+    // -------------------------------
+    let __idleTimer;
+    function resetIdle() {
+      clearTimeout(__idleTimer);
+      __idleTimer = setTimeout(() => (window.location.href = "index.html"), 120000);
+    }
+
+    // -------------------------------
+    //  Utilidades
+    // -------------------------------
+    // Title Case excepto "de"
+    function toTitleCaseExceptDe(s) {
+      if (!s) return "";
+      return s
+        .toLowerCase()
+        .split(/\s+/)
+        .map(w => (w === "de" ? "de" : w.charAt(0).toUpperCase() + w.slice(1)))
+        .join(" ");
+    }
+
+    // Calcular edad en años desde <input type="date">
+    function calcularEdad(fechaInput, idCampoEdad) {
+      const d = new Date(fechaInput.value);
+      if (isNaN(d)) {
+        document.getElementById(idCampoEdad).value = "";
+        return;
+      }
+      const hoy = new Date();
+      let edad = hoy.getFullYear() - d.getFullYear();
+      const m = hoy.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && hoy.getDate() < d.getDate())) edad--;
+      document.getElementById(idCampoEdad).value = edad;
+    }
+
+    // Limpiar a solo dígitos
+    function soloDigitos(str) {
+      return String(str || "").replace(/\D+/g, "");
+    }
+
+    // Validar teléfonos (si hay valor, mínimo 8 dígitos)
+    function validarTelefono(el) {
+      const v = soloDigitos(el.value);
+      if (v && v.length < 8) {
+        el.setCustomValidity("Debe contener al menos 8 dígitos.");
+      } else {
+        el.setCustomValidity("");
+      }
+      el.value = v; // normalizo a solo dígitos
+    }
+
+    // Jornada → Grados
+    const OPCIONES_GRADO = {
+      "Matutina": [
+        "Kinder","Párvulos","Preparatoria",
+        "1ro. Primaria","2do. Primaria","3ro. Primaria","4to. Primaria","5to. Primaria","6to. Primaria",
+        "1ro. Básico","2do. Básico","3ro. Básico",
+        "4to. Bachillerato en Ciencias y Letras","5to. Bachillerato en Ciencias y Letras",
+        "4to. Bachillerato en Computación","5to. Bachillerato en Computación",
+        "4to. Bachillerato en Dibujo Técnico","5to. Bachillerato en Dibujo Técnico",
+        "4to. Perito Contador","5to. Perito Contador","6to. Perito Contador",
+        "4to. Perito en Administración de Empresas","5to. Perito en Administración de Empresas","6to. Perito en Administración de Empresas"
+      ],
+      "Fin de Semana": [
+        "1ro. Básico","2do. Básico","3ro. Básico",
+        "4to. Bachillerato en Ciencias y Letras","5to. Bachillerato en Ciencias y Letras",
+        "4to. Bachillerato en Computación","5to. Bachillerato en Computación",
+        "4to. Perito Contador","5to. Perito Contador","6to. Perito Contador",
+        "4to. Perito en Administración de Empresas","5to. Perito en Administración de Empresas","6to. Perito en Administración de Empresas",
+        "1ro. Básico Madurez","3ro. Básico Madurez","Bachillerato por Madurez"
+      ],
+      "Sabatina": [
+        "1ro. Básico","2do. Básico","3ro. Básico",
+        "4to. Bachillerato en Ciencias y Letras","5to. Bachillerato en Ciencias y Letras",
+        "4to. Bachillerato en Computación","5to. Bachillerato en Computación",
+        "4to. Perito Contador","5to. Perito Contador","6to. Perito Contador",
+        "4to. Perito en Administración de Empresas","5to. Perito en Administración de Empresas","6to. Perito en Administración de Empresas",
+        "1ro. Básico Madurez","3ro. Básico Madurez","Bachillerato por Madurez"
+      ]
+    };
+
+    function actualizarGrados() {
+      const jornada = document.getElementById("jornada").value;
+      const grado = document.getElementById("grado2026");
+      grado.innerHTML = "<option value=''>Seleccione...</option>";
+      const lista = OPCIONES_GRADO[jornada] || [];
+      lista.forEach(g => {
+        const op = document.createElement("option");
+        op.value = g; op.textContent = g;
+        grado.appendChild(op);
+      });
+    }
+
+    // -------------------------------
+    //  Validación + Envío con estado (deshabilitar botón)
+    // -------------------------------
+    function validarFormulario() {
+      const form = document.getElementById("form-nueva");
+
+      // 1) Normalizo títulos en campos libres
+      [
+        "tomaDatos","apellidosEncargado","nombresEncargado","direccion",
+        "ocupacion","lugarTrabajo","apellidosAlumno","nombresAlumno",
+        "contacto1","contacto2"
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = toTitleCaseExceptDe(el.value.trim());
+      });
+
+      // 2) DPI solo dígitos
+      const dpi = document.getElementById("dpi");
+      if (dpi) {
+        dpi.value = soloDigitos(dpi.value);
+        dpi.setCustomValidity("");
+        // (Si más adelante quieres longitud exacta, por ej. 13, descomenta:)
+        // if (dpi.value && dpi.value.length !== 13) dpi.setCustomValidity("El DPI debe contener 13 dígitos.");
+      }
+
+      // 3) Teléfonos (si hay, mínimo 8 dígitos)
+      ["telResidencial","telPersonal","telTrabajo","telContacto1","telContacto2"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) validarTelefono(el);
+      });
+
+      // 4) Correo: reforzamos rápida validación (además de type="email")
+      const correo = document.getElementById("correo");
+      if (correo && correo.value) {
+        const simpleEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!simpleEmail.test(correo.value.trim())) {
+          correo.setCustomValidity("Ingrese un correo válido.");
+        } else {
+          correo.setCustomValidity("");
+        }
+      }
+
+      // 5) Requeridos nativos (required) + customValidity
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        // Enfocar el primer inválido
+        const firstInvalid = form.querySelector(":invalid");
+        if (firstInvalid) firstInvalid.focus();
+        return false;
+      }
+      return true;
+    }
+
+    function setBtnStateSaving(isSaving) {
+      const btn = document.getElementById("btn-guardar");
+      if (!btn) return;
+      if (isSaving) {
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = "Guardando…";
+        btn.disabled = true;
+      } else {
+        btn.textContent = btn.dataset.originalText || "Guardar";
+        btn.disabled = false;
+      }
+    }
+
+    function guardarDatos() {
+      const form = document.getElementById("form-nueva");
+
+      // Validar antes de enviar
+      if (!validarFormulario()) return;
+
+      const params = new URLSearchParams(new FormData(form));
+      setBtnStateSaving(true);
+
+      fetch("https://script.google.com/macros/s/AKfycbzVOA-DKy--XCmtAEbgK8BZEmTJtYfRZ4T0rzxj0zTo8Shivw93WGeMfCqY7IQZT1Q/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: params.toString()
+      })
+      .then(r => r.text())
+      .then(txt => {
+        const t = txt.trim();
+        if (t.startsWith("OK")) {
+          const m = t.match(/fila\s+(\d+)/i);
+          const fila = m ? m[1] : "desconocida";
+          alert("DATOS INGRESADOS CORRECTAMENTE - FILA " + fila);
+          form.reset();
+          window.location.href = "inscripciones.html";
+        } else {
+          alert("Error al guardar: " + t);
+        }
+      })
+      .catch(err => alert("Error de conexión: " + err))
+      .finally(() => setBtnStateSaving(false));
+    }
+
+    // -------------------------------
+    //  Inicialización
+    // -------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      resetIdle();
+
+      // Prefijar FECHA REGISTRO con hoy (para comodidad del usuario)
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+      const dd = String(hoy.getDate()).padStart(2, "0");
+      const fechaISO = `${yyyy}-${mm}-${dd}`;
+      const fr = document.getElementById("fechaRegistro");
+      if (fr && !fr.value) fr.value = fechaISO;
+
+      // Title Case en blur (excepto "de")
+      [
+        "tomaDatos","apellidosEncargado","nombresEncargado","direccion",
+        "ocupacion","lugarTrabajo","apellidosAlumno","nombresAlumno",
+        "contacto1","contacto2"
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("blur", () => el.value = toTitleCaseExceptDe(el.value));
+      });
+
+      // Forzar solo dígitos en DPI y teléfonos mientras escriben
+      const dpi = document.getElementById("dpi");
+      if (dpi) dpi.addEventListener("input", e => e.target.value = soloDigitos(e.target.value));
+      ["telResidencial","telPersonal","telTrabajo","telContacto1","telContacto2"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", () => validarTelefono(el));
+      });
+    });
+
+    ["mousemove","keypress","click","touchstart"].forEach(evt =>
+      document.addEventListener(evt, resetIdle)
+    );
+  </script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="imagenes/logo1.png" alt="Logo" class="logo"/>
+    </header>
+
+    <div class="tarjeta-nueva-inscripcion">
+      <h1 class="titulo-nueva">Nueva Inscripción 2026</h1>
+
+      <form id="form-nueva" class="formulario-nueva" novalidate>
+        <!-- A) FECHA REGISTRO (visible) -->
+        <div>
+          <label for="fechaRegistro">Fecha Registro:</label>
+          <input type="date" id="fechaRegistro" name="fechaRegistro" required>
+        </div>
+
+        <!-- B) Toma de datos -->
+        <div>
+          <label for="tomaDatos">Toma de Datos por:</label>
+          <input type="text" id="tomaDatos" name="tomaDatos" required>
+        </div>
+
+        <!-- C) FECHA DE REGISTRO (NO visible: la pone el servidor) -->
+
+        <!-- D) Proceso a realizar -->
+        <div>
+          <label for="proceso">Proceso a Realizar:</label>
+          <select id="proceso" name="proceso" required>
+            <option value="">Seleccione...</option>
+            <option value="Primer Ingreso">Primer Ingreso</option>
+          </select>
+        </div>
+
+        <!-- E) Entrevista por -->
+        <div>
+          <label for="entrevista">Entrevista por:</label>
+          <select id="entrevista" name="entrevista" required>
+            <option value="">Seleccione...</option>
+            <option value="Evelyn Leal">Evelyn Leal</option>
+            <option value="Luis Ruiz">Luis Ruiz</option>
+            <option value="Gabriela Ruano">Gabriela Ruano</option>
+            <option value="Daryrin Ramirez">Daryrin Ramirez</option>
+            <option value="Daniel Torres">Daniel Torres</option>
+            <option value="Miguel Lemus">Miguel Lemus</option>
+          </select>
+        </div>
+
+        <!-- Datos del encargado -->
+        <div>
+          <label for="apellidosEncargado">Apellidos del Encargado:</label>
+          <input type="text" id="apellidosEncargado" name="apellidosEncargado" required>
+        </div>
+        <div>
+          <label for="nombresEncargado">Nombres del Encargado:</label>
+          <input type="text" id="nombresEncargado" name="nombresEncargado" required>
+        </div>
+        <div>
+          <label for="dpi">No. DPI:</label>
+          <input type="text" id="dpi" name="dpi" inputmode="numeric" placeholder="Solo números">
+        </div>
+        <div>
+          <label for="nacimientoEncargado">Fecha de Nacimiento:</label>
+          <input type="date" id="nacimientoEncargado" name="nacimientoEncargado"
+                 onchange="calcularEdad(this,'edadEncargado')" required>
+        </div>
+        <div>
+          <label for="edadEncargado">Edad Actual:</label>
+          <input type="number" id="edadEncargado" name="edadEncargado" readonly>
+        </div>
+        <div>
+          <label for="parentesco">Parentesco:</label>
+          <select id="parentesco" name="parentesco" required>
+            <option value="">Seleccione...</option>
+            <option value="Madre">Madre</option>
+            <option value="Padre">Padre</option>
+            <option value="Hermano(a)">Hermano(a)</option>
+            <option value="Tío(a)">Tío(a)</option>
+            <option value="Abuelo(a)">Abuelo(a)</option>
+            <option value="Encargado(a)">Encargado(a)</option>
+            <option value="Primo(a)">Primo(a)</option>
+            <option value="Mismo Alumno(a)">Mismo Alumno(a)</option>
+          </select>
+        </div>
+        <div>
+          <label for="estadoCivil">Estado Civil:</label>
+          <select id="estadoCivil" name="estadoCivil">
+            <option value="">Seleccione...</option>
+            <option value="Soltero(a)">Soltero(a)</option>
+            <option value="Casado(a)">Casado(a)</option>
+            <option value="Divorciado(a)">Divorciado(a)</option>
+            <option value="Viudo(a)">Viudo(a)</option>
+          </select>
+        </div>
+        <div>
+          <label for="direccion">Dirección de Residencia:</label>
+          <input type="text" id="direccion" name="direccion">
+        </div>
+        <div>
+          <label for="telResidencial">Teléfono Residencial:</label>
+          <input type="tel" id="telResidencial" name="telResidencial" inputmode="numeric" placeholder="8+ dígitos">
+        </div>
+        <div>
+          <label for="telPersonal">Teléfono Personal:</label>
+          <input type="tel" id="telPersonal" name="telPersonal" inputmode="numeric" placeholder="8+ dígitos">
+        </div>
+        <div>
+          <label for="correo">Correo Electrónico:</label>
+          <input type="email" id="correo" name="correo" placeholder="usuario@dominio.com">
+        </div>
+        <div>
+          <label for="ocupacion">Ocupación, Profesión u Oficio:</label>
+          <input type="text" id="ocupacion" name="ocupacion">
+        </div>
+        <div>
+          <label for="lugarTrabajo">Lugar de Trabajo:</label>
+          <input type="text" id="lugarTrabajo" name="lugarTrabajo">
+        </div>
+        <div>
+          <label for="telTrabajo">Teléfono de Trabajo:</label>
+          <input type="tel" id="telTrabajo" name="telTrabajo" inputmode="numeric" placeholder="8+ dígitos">
+        </div>
+
+        <!-- Datos del alumno -->
+        <div>
+          <label for="apellidosAlumno">Apellidos del Alumno:</label>
+          <input type="text" id="apellidosAlumno" name="apellidosAlumno" required>
+        </div>
+        <div>
+          <label for="nombresAlumno">Nombre del Alumno:</label>
+          <input type="text" id="nombresAlumno" name="nombresAlumno" required>
+        </div>
+        <div>
+          <label for="nacimientoAlumno">Fecha de Nacimiento (Alumno):</label>
+          <input type="date" id="nacimientoAlumno" name="nacimientoAlumno"
+                 onchange="calcularEdad(this,'edadAlumno')" required>
+        </div>
+        <div>
+          <label for="edadAlumno">Edad Actual (Alumno):</label>
+          <input type="number" id="edadAlumno" name="edadAlumno" readonly>
+        </div>
+        <div>
+          <label for="jornada">Jornada del Alumno:</label>
+          <select id="jornada" name="jornada" onchange="actualizarGrados()" required>
+            <option value="">Seleccione...</option>
+            <option value="Matutina">Matutina</option>
+            <option value="Sabatina">Sabatina</option>
+          </select>
+        </div>
+        <div>
+          <label for="grado2026">Grado a cursar en 2026:</label>
+          <select id="grado2026" name="grado2026" required>
+            <option value="">Seleccione una jornada primero...</option>
+          </select>
+        </div>
+
+        <!-- Contactos de emergencia -->
+        <div>
+          <label for="contacto1">Nombre 1er. Contacto (Emergencia):</label>
+          <input type="text" id="contacto1" name="contacto1">
+        </div>
+        <div>
+          <label for="parentesco1">Parentesco 1er. Contacto:</label>
+          <select id="parentesco1" name="parentesco1">
+            <option value="">Seleccione...</option>
+            <option value="Madre">Madre</option>
+            <option value="Padre">Padre</option>
+            <option value="Hermano(a)">Hermano(a)</option>
+            <option value="Tío(a)">Tío(a)</option>
+            <option value="Abuelo(a)">Abuelo(a)</option>
+            <option value="Encargado(a)">Encargado(a)</option>
+            <option value="Primo(a)">Primo(a)</option>
+            <option value="Mismo Alumno(a)">Mismo Alumno(a)</option>
+          </select>
+        </div>
+        <div>
+          <label for="telContacto1">Teléfono 1er. Contacto:</label>
+          <input type="tel" id="telContacto1" name="telContacto1" inputmode="numeric" placeholder="8+ dígitos">
+        </div>
+        <div>
+          <label for="contacto2">Nombre 2do. Contacto (Emergencia):</label>
+          <input type="text" id="contacto2" name="contacto2">
+        </div>
+        <div>
+          <label for="parentesco2">Parentesco 2do. Contacto:</label>
+          <select id="parentesco2" name="parentesco2">
+            <option value="">Seleccione...</option>
+            <option value="Madre">Madre</option>
+            <option value="Padre">Padre</option>
+            <option value="Hermano(a)">Hermano(a)</option>
+            <option value="Tío(a)">Tío(a)</option>
+            <option value="Abuelo(a)">Abuelo(a)</option>
+            <option value="Encargado(a)">Encargado(a)</option>
+            <option value="Primo(a)">Primo(a)</option>
+            <option value="Mismo Alumno(a)">Mismo Alumno(a)</option>
+          </select>
+        </div>
+        <div>
+          <label for="telContacto2">Teléfono 2do. Contacto:</label>
+          <input type="tel" id="telContacto2" name="telContacto2" inputmode="numeric" placeholder="8+ dígitos">
+        </div>
+
+        <!-- Botones -->
+        <div class="botones-nueva">
+          <button type="button" id="btn-guardar" class="boton" onclick="guardarDatos()">Guardar</button>
+          <a href="inscripciones.html" class="boton">Volver</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
