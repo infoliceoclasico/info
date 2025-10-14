@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <title>Reportes de Asistencia</title>
   <link rel="stylesheet" href="estilos.css">
+
+  <!-- Evitar caché del navegador -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 </head>
 <body>
 
@@ -16,40 +21,40 @@
     <div class="tarjeta-reporte">
       <div class="filtros-reporte">
         <label for="fechaFiltro">Fecha:</label>
-        <input type="date" id="fechaFiltro">
+        <input type="date" id="fechaFiltro" autocomplete="off">
 
         <label for="gradoFiltro">Grado:</label>
-        <select id="gradoFiltro">
+        <select id="gradoFiltro" autocomplete="off">
           <option value="">Seleccione grado</option>
-          <option value="KINDER">KINDER</option>
-          <option value="PÁRVULOS">PÁRVULOS</option>
-          <option value="PREPARATORIA">PREPARATORIA</option>
-          <option value="1RO. PRIMARIA">1RO. PRIMARIA</option>
-          <option value="2DO. PRIMARIA">2DO. PRIMARIA</option>
-          <option value="3RO. PRIMARIA">3RO. PRIMARIA</option>
-          <option value="4TO. PRIMARIA">4TO. PRIMARIA</option>
-          <option value="5TO. PRIMARIA">5TO. PRIMARIA</option>
-          <option value="6TO. PRIMARIA">6TO. PRIMARIA</option>
-          <option value="1RO. BÁSICO">1RO. BÁSICO</option>
-          <option value="2DO. BÁSICO">2DO. BÁSICO</option>
-          <option value="3RO. BÁSICO">3RO. BÁSICO</option>
-          <option value="4TO. COMPUTACIÓN">4TO. COMPUTACIÓN</option>
-          <option value="5TO. COMPUTACIÓN">5TO. COMPUTACIÓN</option>
-          <option value="4TO. DIBUJO TÉCNICO">4TO. DIBUJO TÉCNICO</option>
-          <option value="5TO. DIBUJO TÉCNICO">5TO. DIBUJO TÉCNICO</option>
-          <option value="4TO. CIENCIAS Y LETRAS">4TO. CIENCIAS Y LETRAS</option>
-          <option value="5TO. CIENCIAS Y LETRAS">5TO. CIENCIAS Y LETRAS</option>
-          <option value="4TO. PERITO CONTADOR">4TO. PERITO CONTADOR</option>
-          <option value="5TO. PERITO CONTADOR">5TO. PERITO CONTADOR</option>
-          <option value="6TO. PERITO CONTADOR">6TO. PERITO CONTADOR</option>
-          <option value="4TO. ADMINISTRACIÓN">4TO. ADMINISTRACIÓN</option>
-          <option value="5TO. ADMINISTRACIÓN">5TO. ADMINISTRACIÓN</option>
-          <option value="6TO. ADMINISTRACIÓN">6TO. ADMINISTRACIÓN</option>
+          <option value="Kinder">Kinder</option>
+          <option value="Párvulos">Párvulos</option>
+          <option value="Preparatoría">Preparatoría</option>
+          <option value="1ro. Primaria">1ro. Primaria</option>
+          <option value="2do. Primaria">2do. Primaria</option>
+          <option value="3ro. Primaria">3ro. Primaria</option>
+          <option value="4to. Primaria">4to. Primaria</option>
+          <option value="5to. Primaria">5to. Primaria</option>
+          <option value="6to. Primaria">6to. Primaria</option>
+          <option value="1ro. Básico">1ro. Básico</option>
+          <option value="2do. Básico">2do. Básico</option>
+          <option value="3ro. Básico">3ro. Básico</option>
+          <option value="4to. Computación">4to. Computación</option>
+          <option value="5to. Computación">5to. Computación</option>
+          <option value="4to. Dibujo Técnico">4to. Dibujo Técnico</option>
+          <option value="5to. Dibujo Técnico">5to. Dibujo Técnico</option>
+          <option value="4to. Ciencias y Letras">4to. Ciencias y Letras</option>
+          <option value="5to. Ciencias y Letras">5to. Ciencias y Letras</option>
+          <option value="4to. Perito Contador">4to. Perito Contador</option>
+          <option value="5to. Perito Contador">5to. Perito Contador</option>
+          <option value="6to. Perito Contador">6to. Perito Contador</option>
+          <option value="4to. Administración">4to. Administración</option>
+          <option value="5to. Administración">5to. Administración</option>
+          <option value="6to. Administración">6to. Administración</option>
         </select>
 
         <button class="boton" onclick="filtrarReporte()">Filtrar</button>
-        <label><input type="checkbox" id="soloAusentes" onchange="aplicarFiltroAusentes()"> Mostrar solo ausentes</label>
-        <label><input type="checkbox" id="soloPresentes" onchange="aplicarFiltroPresentes()"> Mostrar solo presentes</label>
+        <label><input type="checkbox" id="soloAusentes" onchange="aplicarFiltroAusentes()" autocomplete="off"> Mostrar solo ausentes</label>
+        <label><input type="checkbox" id="soloPresentes" onchange="aplicarFiltroPresentes()" autocomplete="off"> Mostrar solo presentes</label>
         <button class="boton" onclick="generarReporteGeneral()">Ver todos los ausentes</button>
       </div>
 
@@ -77,8 +82,14 @@
   </div>
 
   <script>
+    // ===========================
+    // Configuración
+    // ===========================
+    const IDLE_MS = 60000; // 1 minuto (puedes ajustar el tiempo aquí)
+
     const usuario = sessionStorage.getItem("usuario");
     let datosCompletos = [];
+    let idleTimer;
 
     if (!usuario) {
       window.location.href = "asistencia_login.html";
@@ -87,8 +98,28 @@
       document.getElementById("contenido").style.display = "block";
     }
 
+    // Limpieza de datos/UI (sin romper tu lógica)
+    function wipeData() {
+      try { sessionStorage.removeItem("usuario"); } catch (e) {}
+
+      datosCompletos = [];
+      const tabla = document.getElementById("tablaAsistencia");
+      if (tabla) {
+        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Esperando datos...</td></tr>`;
+      }
+      const fecha = document.getElementById("fechaFiltro");
+      const grado = document.getElementById("gradoFiltro");
+      const chkA = document.getElementById("soloAusentes");
+      const chkP = document.getElementById("soloPresentes");
+      if (fecha) fecha.value = "";
+      if (grado) grado.selectedIndex = 0;
+      if (chkA) chkA.checked = false;
+      if (chkP) chkP.checked = false;
+    }
+
     function cerrarSesion() {
       sessionStorage.removeItem("usuario");
+      wipeData();
     }
 
     async function filtrarReporte() {
@@ -108,7 +139,7 @@
 
       try {
         const url = `https://script.google.com/macros/s/AKfycbz1oM7_ncBtZsm9TVxG3G3llcszY2xSJq2UbDK-0266cJIJnVfOdUsVmBD-u8zrMUXH/exec?fecha=${fecha}&grado=${encodeURIComponent(grado)}`;
-        const respuesta = await fetch(url);
+        const respuesta = await fetch(url, { cache: "no-store" });
         const datos = await respuesta.json();
 
         if (!Array.isArray(datos)) {
@@ -137,17 +168,15 @@
       mostrarDatosFiltrados(datosFiltrados);
     }
 
-function generarReporteGeneral() {
-  const fechaInput = document.getElementById("fechaFiltro").value;
-  if (!fechaInput) {
-    alert("Por favor seleccione una fecha.");
-    return;
-  }
-
-  const fecha = new Date(fechaInput).toISOString().split("T")[0];
-  window.open(`reporte_ausentes_pdf.html?fecha=${fecha}`, "_blank");
-}
-
+    function generarReporteGeneral() {
+      const fechaInput = document.getElementById("fechaFiltro").value;
+      if (!fechaInput) {
+        alert("Por favor seleccione una fecha.");
+        return;
+      }
+      const fecha = new Date(fechaInput).toISOString().split("T")[0];
+      window.open(`reporte_ausentes_pdf.html?fecha=${fecha}`, "_blank");
+    }
 
     function mostrarDatosFiltrados(datos) {
       const tabla = document.getElementById("tablaAsistencia");
@@ -170,6 +199,32 @@ function generarReporteGeneral() {
         `;
       }
     }
+
+    // ---------------------------------------
+    // INACTIVIDAD: regresar a index.html en IDLE_MS
+    // ---------------------------------------
+    function resetIdle() {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        wipeData();
+        window.location.href = "index.html";
+      }, IDLE_MS);
+    }
+
+    ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach(evento => {
+      document.addEventListener(evento, resetIdle, { passive: true });
+    });
+    resetIdle(); // iniciar temporizador al cargar
+
+    // Limpiar datos si la pestaña se oculta o la página se cierra/recarga
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        wipeData();
+      }
+    });
+    window.addEventListener("beforeunload", () => {
+      wipeData();
+    });
   </script>
 
 </body>

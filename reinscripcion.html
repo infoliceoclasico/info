@@ -6,6 +6,21 @@
   <title>Reinscripción 2026</title>
   <link rel="stylesheet" href="estilos.css"/>
 
+  <!-- Mini refuerzo visual para inválidos (no requiere tocar tu CSS global) -->
+  <style>
+    .formulario-nueva input.is-invalid,
+    .formulario-nueva select.is-invalid,
+    .formulario-nueva textarea.is-invalid{
+      border-color:#e55353 !important;
+      box-shadow:0 0 0 3px rgba(229,83,83,.15);
+    }
+    .formulario-nueva input:invalid[required],
+    .formulario-nueva select:invalid[required],
+    .formulario-nueva textarea:invalid[required]{
+      border-color:#e55353;
+    }
+  </style>
+
   <script>
     // ---------------------------
     //  Inactividad: 120 s → index
@@ -15,14 +30,12 @@
     ["mousemove","keypress","click","touchstart"].forEach(e=>document.addEventListener(e, resetIdle));
 
     // ---------------------------
-    //  APIs
+    //  APIs (NO CAMBIAR)
     // ---------------------------
-    // Web App PRINCIPAL (buscar/detalle/guardar en REINSCRIPCIONES)
     const API = "https://script.google.com/macros/s/AKfycbye7HeuGh6O1VDb9Y_ub1OflO8ck5n-qc_5lsCngc9GwpxUCCrq0XlnzNOU29wxAeA4Sg/exec";
-    // Web App SOLOCONFIRMAR (insertar en DATOS)
     const API_DATOS = "https://script.google.com/macros/s/AKfycbyIjSjmXvq4slIPfJsaVq3qxKiB-1sU4oyuZS4xCslf-E0xWNJKaqv0a9GNgBNoZYmRPA/exec";
 
-    // id ↔ encabezado en la hoja REINSCRIPCIONES
+    // id ↔ encabezado en la hoja REINSCRIPCIONES (NO CAMBIAR)
     const MAP = {
       fecha: "FECHA",
       datos_por: "DATOS TOMADOS POR",
@@ -58,15 +71,16 @@
       em2_telefono: "EN CASO DE EMERGENCIA EL TELÉFONO DE UN 2DO. CONTACTO",
     };
 
+    // ⚠️ Obligatorios EXACTOS que pediste con *
     const REQUERIDOS = [
-      "fecha","datos_por","proceso_realizar",
+      "fecha","proceso_realizar",
       "ape_titular","nom_titular","dpi","nac_titular","parentesco","estado_civil",
-      "direccion","tel_pers","correo",
+      "direccion","tel_pers","correo","ocupacion","lugar_trab",
       "ape_alumno","nom_alumno","nac_alumno","jornada","grado_2026",
-      "em1_nombre","em1_telefono"
+      "em1_nombre","em1_parentesco","em1_telefono"
     ];
 
-    // Grados dependientes
+    // Grados dependientes (sin cambios)
     const GRADOS_BY_JORNADA = {
       "Matutina": [
         "Kinder","Párvulos","Preparatoria",
@@ -121,9 +135,9 @@
         return `${yy}-${mm}-${dd}`;
       }
       const s = String(v).trim();
-      let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/); // dd/mm/yyyy
+      let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
       if (m){ const dd=m[1].padStart(2,'0'), mm=m[2].padStart(2,'0'), yy=m[3]; return `${yy}-${mm}-${dd}`; }
-      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (m) return s; // ok
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (m) return s;
       const d = new Date(s); if (!isNaN(d)){
         const yy=d.getFullYear(), mm2=String(d.getMonth()+1).padStart(2,'0'), dd2=String(d.getDate()).padStart(2,'0');
         return `${yy}-${mm2}-${dd2}`;
@@ -131,7 +145,7 @@
       return "";
     }
 
-    // Title Case español con conectores
+    // Title Case (conectores en minúscula)
     const CONNECTORS = new Set(["de","del","la","las","el","los","y","o","u","a","al","en"]);
     function toTitleCaseEs(s){
       return String(s||"").toLowerCase().replace(/\S+/g, w=>{
@@ -140,7 +154,6 @@
         return w.charAt(0).toUpperCase() + w.slice(1);
       });
     }
-    // Normalizar campos de texto
     function normalizeTextFields(){
       const tcIds = [
         "datos_por","proceso_realizar","ape_titular","nom_titular","direccion",
@@ -223,35 +236,61 @@
       return out;
     }
 
-    function validar(){
-      const dpi = document.getElementById("dpi");
-      if (dpi) dpi.value = onlyDigits(dpi.value);
+    // Marca un campo inválido y prepara limpieza al teclear/cambiar
+    function markInvalid(el, msg="Campo requerido.") {
+      if (!el) return false;
+      el.classList.add("is-invalid");
+      el.setCustomValidity(msg);
+      const clear = () => {
+        el.classList.remove("is-invalid");
+        el.setCustomValidity("");
+        el.removeEventListener("input", clear);
+        el.removeEventListener("change", clear);
+      };
+      el.addEventListener("input", clear);
+      el.addEventListener("change", clear);
+      el.reportValidity();
+      el.focus({preventScroll:true});
+      el.scrollIntoView({block:"center", behavior:"smooth"});
+      return false;
+    }
 
-      ["tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"].forEach(id=>{
+    function validar(){
+      // Normalizo números
+      const numIds = ["dpi","tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"];
+      numIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = onlyDigits(el.value);
       });
 
-      for (const id of ["tel_resid","tel_pers","tel_trab","em1_telefono","em2_telefono"]){
+      // Teléfonos con valor → mínimo 8 dígitos
+      for (const id of numIds){
         const el = document.getElementById(id);
         if (el && el.value && el.value.length < 8){
-          el.setCustomValidity("Debe contener al menos 8 dígitos.");
-          el.reportValidity(); el.focus(); return false;
-        } else if (el){ el.setCustomValidity(""); }
+          return markInvalid(el, "Debe contener al menos 8 dígitos.");
+        } else if (el){
+          el.classList.remove("is-invalid"); el.setCustomValidity("");
+        }
       }
 
+      // Correo válido
       const correo = document.getElementById("correo");
       if (correo){
-        const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo.value);
-        if (!ok){ correo.setCustomValidity("Ingrese un correo válido."); correo.reportValidity(); correo.focus(); return false; }
-        else { correo.setCustomValidity(""); }
+        const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((correo.value||"").trim());
+        if (!ok) return markInvalid(correo, "Ingrese un correo válido.");
+        correo.classList.remove("is-invalid");
+        correo.setCustomValidity("");
       }
 
+      // Requeridos
       for (const id of REQUERIDOS){
         const el = document.getElementById(id);
         if (el && !String(el.value).trim()){
-          el.setCustomValidity("Campo requerido."); el.reportValidity(); el.focus(); return false;
-        } else if (el){ el.setCustomValidity(""); }
+          return markInvalid(el, "Campo requerido.");
+        } else if (el){
+          el.classList.remove("is-invalid");
+          el.setCustomValidity("");
+        }
       }
       return true;
     }
@@ -326,6 +365,10 @@
       isEdit = true;
       setAllDisabled(false);
 
+      // Auto-actualiza la FECHA al día de hoy (lo pediste)
+      const f = document.getElementById("fecha");
+      if (f) f.value = todayYYYYMMDD();
+
       const j = (document.getElementById("jornada").value || "Matutina").trim();
       const gActual = document.getElementById("grado_2026").value || "";
       populateGrados(j, gActual);
@@ -394,10 +437,10 @@
       setAllDisabled(true);
       inFlight = true;
 
-      const idem = genIdem(); // idempotencia
+      const idem = genIdem();
 
       const params = {
-        idem, // ← clave idempotente
+        idem,
         fechaRegistro: getVal("fecha"),
         tomaDatos: getVal("datos_por"),
         proceso: getVal("proceso_realizar"),
@@ -445,7 +488,6 @@
           else   out = { ok:false, error: txt };
         }
 
-        // Manejo especial DUPLICADO
         if (!out.ok && out.error === 'DUPLICADO' && out.row){
           alert(`Ya existe un registro para ese alumno en DATOS (fila ${out.row}). No se insertó duplicado.`);
           setAllDisabled(false);
@@ -490,45 +532,52 @@
     <div class="tarjeta-nueva-inscripcion">
       <h1 class="titulo-nueva">Reinscripción 2026</h1>
 
+      <!-- INSTRUCCIONES -->
+      <p class="instrucciones-form">
+        <strong>Registro de Información.</strong> Verifique y, si es necesario, <strong>modifique</strong> los datos.
+        <span>Complete <u>todos los campos</u> y en especial los marcados con <strong>*</strong> (obligatorios).
+        Use <strong>Guardar</strong> para aplicar cambios y luego <strong>Confirmar</strong> para trasladar a DATOS.</span>
+      </p>
+
       <form id="form-reins" class="formulario-nueva" onsubmit="return false;" novalidate>
 
-        <div class="subbloque">Datos generales</div>
+        <div class="subbloque">DATOS GENERALES</div>
         <div>
-          <label for="fecha">Fecha</label>
+          <label for="fecha" class="fld"><span class="bar"></span> FECHA REGISTRO<span class="req">*</span>:</label>
           <input type="date" id="fecha" required>
         </div>
         <div>
-          <label for="datos_por">Datos tomados por</label>
-          <input type="text" id="datos_por" required>
+          <label for="datos_por" class="fld"><span class="bar"></span> TOMA DE DATOS POR</label>
+          <input type="text" id="datos_por">
         </div>
         <div>
-          <label for="proceso_realizar">Proceso a realizar</label>
+          <label for="proceso_realizar" class="fld"><span class="bar"></span> PROCESO A REALIZAR<span class="req">*</span>:</label>
           <input type="text" id="proceso_realizar" required>
         </div>
 
-        <div class="subbloque">Titular (Padre/Madre/Encargado)</div>
+        <div class="subbloque">INFORMACIÓN TITULAR (PADRE/MADRE/ENCARGADO)</div>
         <div>
-          <label for="ape_titular">Apellidos</label>
+          <label for="ape_titular" class="fld"><span class="bar"></span> APELLIDOS ENCARGADO TITULAR<span class="req">*</span>:</label>
           <input type="text" id="ape_titular" required>
         </div>
         <div>
-          <label for="nom_titular">Nombres</label>
+          <label for="nom_titular" class="fld"><span class="bar"></span> NOMBRES ENCARGADO TITULAR<span class="req">*</span>:</label>
           <input type="text" id="nom_titular" required>
         </div>
         <div>
-          <label for="dpi">No. DPI</label>
+          <label for="dpi" class="fld"><span class="bar"></span> NO. DPI<span class="req">*</span>:</label>
           <input type="text" id="dpi" inputmode="numeric" placeholder="Solo dígitos" required>
         </div>
         <div>
-          <label for="nac_titular">Fecha de nacimiento</label>
+          <label for="nac_titular" class="fld"><span class="bar"></span> FECHA DE NACIMIENTO<span class="req">*</span>:</label>
           <input type="date" id="nac_titular" required>
         </div>
         <div>
-          <label for="edad_titular">Edad actual</label>
+          <label for="edad_titular" class="fld"><span class="bar"></span> EDAD ACTUAL:</label>
           <input type="text" id="edad_titular" inputmode="numeric" placeholder="Auto">
         </div>
         <div>
-          <label for="parentesco">Parentesco</label>
+          <label for="parentesco" class="fld"><span class="bar"></span> PARENTESCO<span class="req">*</span>:</label>
           <select id="parentesco" required>
             <option value="">— Seleccione —</option>
             <option>Madre</option>
@@ -542,7 +591,7 @@
           </select>
         </div>
         <div>
-          <label for="estado_civil">Estado civil</label>
+          <label for="estado_civil" class="fld"><span class="bar"></span> ESTADO CIVIL<span class="req">*</span>:</label>
           <select id="estado_civil" required>
             <option value="">— Seleccione —</option>
             <option>Soltero(a)</option>
@@ -552,53 +601,53 @@
           </select>
         </div>
         <div style="grid-column: span 2;">
-          <label for="direccion">Dirección de residencia</label>
+          <label for="direccion" class="fld"><span class="bar"></span> DIRECCIÓN DE RESIDENCIA<span class="req">*</span>:</label>
           <input type="text" id="direccion" required>
         </div>
         <div>
-          <label for="tel_resid">Teléfono residencial</label>
+          <label for="tel_resid" class="fld"><span class="bar"></span> TELÉFONO RESIDENCIAL</label>
           <input type="text" id="tel_resid" inputmode="numeric" placeholder="Opcional">
         </div>
         <div>
-          <label for="tel_pers">Teléfono personal</label>
+          <label for="tel_pers" class="fld"><span class="bar"></span> TELÉFONO PERSONAL<span class="req">*</span>:</label>
           <input type="text" id="tel_pers" inputmode="numeric" required>
         </div>
         <div>
-          <label for="correo">Correo electrónico</label>
+          <label for="correo" class="fld"><span class="bar"></span> CORREO ELECTRÓNICO<span class="req">*</span>:</label>
           <input type="email" id="correo" required>
         </div>
         <div>
-          <label for="ocupacion">Ocupación / Profesión / Oficio</label>
-          <input type="text" id="ocupacion">
+          <label for="ocupacion" class="fld"><span class="bar"></span> OCUPACIÓN, PROFESIÓN U OFICIO<span class="req">*</span></label>
+          <input type="text" id="ocupacion" required>
         </div>
         <div>
-          <label for="lugar_trab">Lugar de trabajo</label>
-          <input type="text" id="lugar_trab">
+          <label for="lugar_trab" class="fld"><span class="bar"></span> LUGAR DE TRABAJO<span class="req">*</span>:</label>
+          <input type="text" id="lugar_trab" required>
         </div>
         <div>
-          <label for="tel_trab">Teléfono de trabajo</label>
+          <label for="tel_trab" class="fld"><span class="bar"></span> TELÉFONO DE TRABAJO</label>
           <input type="text" id="tel_trab" inputmode="numeric" placeholder="Opcional">
         </div>
 
-        <div class="subbloque">Alumno</div>
+        <div class="subbloque">INFORMACIÓN ALUMNO</div>
         <div>
-          <label for="ape_alumno">Apellidos del alumno</label>
+          <label for="ape_alumno" class="fld"><span class="bar"></span> APELLIDOS DEL ALUMNO<span class="req">*</span>:</label>
           <input type="text" id="ape_alumno" required>
         </div>
         <div>
-          <label for="nom_alumno">Nombre del alumno</label>
+          <label for="nom_alumno" class="fld"><span class="bar"></span> NOMBRE DEL ALUMNO<span class="req">*</span>:</label>
           <input type="text" id="nom_alumno" required>
         </div>
         <div>
-          <label for="nac_alumno">Fecha de nacimiento (alumno)</label>
+          <label for="nac_alumno" class="fld"><span class="bar"></span> FECHA DE NACIMIENTO (ALUMNO)<span class="req">*</span>:</label>
           <input type="date" id="nac_alumno" required>
         </div>
         <div>
-          <label for="edad_alumno">Edad actual (alumno)</label>
+          <label for="edad_alumno" class="fld"><span class="bar"></span> EDAD ACTUAL (ALUMNO):</label>
           <input type="text" id="edad_alumno" inputmode="numeric" placeholder="Auto">
         </div>
         <div>
-          <label for="jornada">Jornada del alumno</label>
+          <label for="jornada" class="fld"><span class="bar"></span> JORNADA DEL ALUMNO<span class="req">*</span>:</label>
           <select id="jornada" required>
             <option value="">— Seleccione jornada —</option>
             <option>Matutina</option>
@@ -606,35 +655,35 @@
           </select>
         </div>
         <div>
-          <label for="grado_2026">Grado a cursar en 2026</label>
+          <label for="grado_2026" class="fld"><span class="bar"></span> GRADO A CURSAR EN 2026<span class="req">*</span>:</label>
           <select id="grado_2026" required>
             <option value="">—</option>
           </select>
         </div>
 
-        <div class="subbloque">Contactos de emergencia</div>
+        <div class="subbloque">CONTACTOS DE EMERGENCIA</div>
         <div>
-          <label for="em1_nombre">1er. contacto - Nombre</label>
+          <label for="em1_nombre" class="fld"><span class="bar"></span> NOMBRE DE 1ER. CONTACTO<span class="req">*</span>:</label>
           <input type="text" id="em1_nombre" required>
         </div>
         <div>
-          <label for="em1_parentesco">1er. contacto - Parentesco</label>
-          <input type="text" id="em1_parentesco">
+          <label for="em1_parentesco" class="fld"><span class="bar"></span> PARENTESCO DE 1ER. CONTACTO<span class="req">*</span>:</label>
+          <input type="text" id="em1_parentesco" required>
         </div>
         <div>
-          <label for="em1_telefono">1er. contacto - Teléfono</label>
+          <label for="em1_telefono" class="fld"><span class="bar"></span> TELÉFONO DE 1ER. CONTACTO<span class="req">*</span>:</label>
           <input type="text" id="em1_telefono" inputmode="numeric" required>
         </div>
         <div>
-          <label for="em2_nombre">2do. contacto - Nombre</label>
+          <label for="em2_nombre" class="fld"><span class="bar"></span> NOMBRE DE 2DO. CONTACTO:</label>
           <input type="text" id="em2_nombre">
         </div>
         <div>
-          <label for="em2_parentesco">2do. contacto - Parentesco</label>
+          <label for="em2_parentesco" class="fld"><span class="bar"></span> PARENTESCO DE 2DO. CONTACTO:</label>
           <input type="text" id="em2_parentesco">
         </div>
         <div>
-          <label for="em2_telefono">2do. contacto - Teléfono</label>
+          <label for="em2_telefono" class="fld"><span class="bar"></span> TELÉFONO DE 2DO. CONTACTO:</label>
           <input type="text" id="em2_telefono" inputmode="numeric">
         </div>
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solicitud de Reposición</title>
+  <link rel="stylesheet" href="estilos.css"/>
+
+  <script>
+    // ===============================
+    // Inactividad 120s → index.html
+    // ===============================
+    let __idleTimer;
+    function resetIdle(){
+      clearTimeout(__idleTimer);
+      __idleTimer = setTimeout(()=> (window.location.href = "index.html"), 120000);
+    }
+    ["mousemove","keypress","click","touchstart"].forEach(evt =>
+      document.addEventListener(evt, resetIdle)
+    );
+
+    // ===============================
+    // Config API (Apps Script)
+    // ===============================
+    const API = "https://script.google.com/macros/s/AKfycbynTa40E4WtW1Ek2JxxOWHuY9SLQv5nObFnOwi_D3skxb2TTLYGiDa7uLbYUl70hwov6A/exec";
+
+    // ===============================
+    // Utilidades
+    // ===============================
+    function debounce(fn, delay=350){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), delay); }; }
+    function $(sel){ return document.querySelector(sel); }
+    function create(tag, cls){ const el = document.createElement(tag); if (cls) el.className = cls; return el; }
+
+    // Estado global
+    let seleccion = null;     // { email, nombre, grado, jornada, correoPadre, codigo }
+    let __searchId = 0;       // Anticolisión de respuestas de búsqueda
+
+    // ===============================
+    // BÚSQUEDA (autocompletar por correo)
+    // ===============================
+    async function buscarCorreos(q){
+      const estado = $("#estado");
+      const lista  = $("#resultados");
+      lista.innerHTML = "";
+
+      const query = String(q || "").trim().toLowerCase();
+      if (query.length < 2){
+        estado.textContent = "Escriba al menos 2 caracteres del correo…";
+        return;
+      }
+      if (!navigator.onLine){
+        estado.textContent = "Sin conexión a internet.";
+        return;
+      }
+
+      estado.textContent = "Buscando…";
+
+      // id de esta búsqueda → descartar respuestas viejas
+      const myId = ++__searchId;
+
+      try{
+        const url = `${API}?mod=repo_buscar&q=${encodeURIComponent(query)}&limit=25`;
+        const resp = await fetch(url, { method:"GET" });
+        const data = await resp.json();
+
+        // Si existe una búsqueda más nueva, se descarta esta respuesta
+        if (myId !== __searchId) return;
+
+        const items = Array.isArray(data && data.items) ? data.items : [];
+        if (!items.length){
+          estado.textContent = "Sin coincidencias.";
+          return;
+        }
+
+        // Limpiar y pintar resultados vigentes
+        lista.innerHTML = "";
+        estado.textContent = `${items.length} resultado(s).`;
+
+        items.forEach(it=>{
+          const card   = create("div","item-resultado");
+          const nombre = create("span","nombre"); nombre.textContent = it.nombre || "—";
+          const meta   = create("div","meta");
+          meta.textContent = `${it.email} · ${[it.grado, it.jornada].filter(Boolean).join(" · ")}`;
+
+          card.appendChild(nombre);
+          card.appendChild(meta);
+          card.tabIndex = 0;
+
+          card.addEventListener("click", ()=>{
+            seleccion = it;
+            $("#correo").value = it.email || "";
+            $("#nombreAlumno").value = it.nombre || "";
+            $("#pillMeta").textContent = [it.grado, it.jornada].filter(Boolean).join(" · ") || "—";
+            lista.innerHTML = "";
+            estado.textContent = "Alumno seleccionado.";
+          });
+
+          card.addEventListener("keydown", (ev)=>{
+            if (ev.key === "Enter" || ev.key === " ") card.click();
+          });
+
+          lista.appendChild(card);
+        });
+      }catch(err){
+        if (myId !== __searchId) return; // Evitar pintar errores obsoletos
+        estado.textContent = "Error al buscar: " + err.message;
+      }
+    }
+    const debouncedBuscar = debounce(buscarCorreos, 350);
+
+    // ===============================
+    // ENVIAR / CONFIRMAR SOLICITUD (por GET con URLSearchParams)
+    // ===============================
+    async function enviarSolicitud(ev){
+      ev.preventDefault();
+      const msg = $("#msg");
+      msg.className = "mensaje";
+      msg.textContent = "";
+
+      // Validaciones
+      if (!seleccion || ($("#correo").value.trim().toLowerCase() !== String(seleccion.email||"").toLowerCase())){
+        msg.classList.add("error");
+        msg.textContent = "Seleccione un correo válido de la lista.";
+        return;
+      }
+      const tipo = $("#tipoRepo").value;
+      if (!tipo){
+        msg.classList.add("error");
+        msg.textContent = "Seleccione el tipo de reposición.";
+        return;
+      }
+
+      // Botón → Guardando…
+      const btn = $("#btnEnviar");
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = "Enviando…";
+
+      try{
+        // Armar parámetros seguros
+        const params = new URLSearchParams();
+        params.set("mod", "repo_guardar");
+        params.set("data", JSON.stringify({
+          email: seleccion.email || "",
+          nombre: seleccion.nombre || "",
+          grado: seleccion.grado || "",
+          jornada: seleccion.jornada || "",
+          correoPadre: seleccion.correoPadre || "",
+          tipo,
+          codigo: seleccion.codigo || ""
+        }));
+
+        // Envío por GET para evitar preflight/CORS
+        const url = API + "?" + params.toString();
+        const resp = await fetch(url, { method: "GET" });
+        const data = await resp.json();
+
+        if (data && data.ok){
+          msg.classList.add("ok");
+          msg.textContent = "Solicitud registrada. N° caso: " + (data.caseId || "—") + ".";
+          $("#tipoRepo").selectedIndex = 0; // opcional: reset select
+        }else{
+          msg.classList.add("error");
+          msg.textContent = (data && data.message) ? data.message : "No se pudo registrar la solicitud.";
+        }
+      }catch(err){
+        msg.classList.add("error");
+        msg.textContent = "Error de red/servidor: " + err.message;
+      }finally{
+        btn.disabled = false; btn.textContent = original;
+      }
+    }
+
+    // ===============================
+    // Init
+    // ===============================
+    document.addEventListener("DOMContentLoaded", ()=>{
+      resetIdle();
+      $("#correo").addEventListener("input", (e)=> debouncedBuscar(e.target.value));
+      $("#formRepo").addEventListener("submit", enviarSolicitud);
+    });
+  </script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <img src="imagenes/logo1.png" alt="Logo" class="logo"/>
+    </header>
+
+    <div class="tarjeta-nueva-inscripcion">
+      <h1 class="titulo-nueva">Solicitud de Reposición</h1>
+
+      <form id="formRepo" class="formulario-nueva" onsubmit="return false;" novalidate>
+        <!-- Columna 1: correo -->
+        <div>
+          <label for="correo">Correo institucional del alumno:</label>
+          <input type="email" id="correo" name="correo" placeholder="Empiece a escribir el correo…" autocomplete="off" required>
+          <div id="estado" class="estado-busqueda">Escriba al menos 2 caracteres del correo…</div>
+        </div>
+
+        <!-- Columna 2: nombre (solo lectura) -->
+        <div>
+          <label for="nombreAlumno">Nombre del alumno:</label>
+          <input type="text" id="nombreAlumno" name="nombreAlumno" placeholder="Nombre del alumno" disabled>
+          <div class="pill" id="pillMeta">—</div>
+        </div>
+
+        <!-- Resultados buscador (full width) -->
+        <div id="resultados" class="resultados" style="grid-column: span 2;"></div>
+
+        <!-- Tipo de reposición -->
+        <div>
+          <label for="tipoRepo">¿Qué desea reponer?</label>
+          <select id="tipoRepo" name="tipoRepo" required>
+            <option value="" selected disabled>Seleccione…</option>
+            <option value="USUARIO_GEDUCAR">Usuario GEDUCAR</option>
+            <option value="CONTRASENIA_CORREO">Contraseña correo institucional</option>
+            <option value="AMBOS">Ambos</option>
+          </select>
+        </div>
+
+        <!-- Botones -->
+        <div class="botones-nueva" style="grid-column: span 2;">
+          <button id="btnEnviar" class="boton" type="submit">Confirmar solicitud</button>
+          <a class="boton boton-secundario" href="index.html">Volver</a>
+        </div>
+
+        <!-- Mensaje -->
+        <div style="grid-column: span 2;">
+          <div id="msg" class="mensaje" role="status"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

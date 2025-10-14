@@ -19,7 +19,6 @@
     // -------------------------------
     //  Utilidades
     // -------------------------------
-    // Title Case excepto "de"
     function toTitleCaseExceptDe(s) {
       if (!s) return "";
       return s
@@ -29,7 +28,6 @@
         .join(" ");
     }
 
-    // Calcular edad en años desde <input type="date">
     function calcularEdad(fechaInput, idCampoEdad) {
       const d = new Date(fechaInput.value);
       if (isNaN(d)) {
@@ -43,12 +41,10 @@
       document.getElementById(idCampoEdad).value = edad;
     }
 
-    // Limpiar a solo dígitos
     function soloDigitos(str) {
       return String(str || "").replace(/\D+/g, "");
     }
 
-    // Validar teléfonos (si hay valor, mínimo 8 dígitos)
     function validarTelefono(el) {
       const v = soloDigitos(el.value);
       if (v && v.length < 8) {
@@ -56,10 +52,9 @@
       } else {
         el.setCustomValidity("");
       }
-      el.value = v; // normalizo a solo dígitos
+      el.value = v;
     }
 
-    // Jornada → Grados
     const OPCIONES_GRADO = {
       "Matutina": [
         "Kinder","Párvulos","Preparatoria",
@@ -101,56 +96,40 @@
       });
     }
 
-    // -------------------------------
-    //  Validación + Envío con estado (deshabilitar botón)
-    // -------------------------------
     function validarFormulario() {
       const form = document.getElementById("form-nueva");
 
-      // 1) Normalizo títulos en campos libres
-      [
-        "tomaDatos","apellidosEncargado","nombresEncargado","direccion",
-        "ocupacion","lugarTrabajo","apellidosAlumno","nombresAlumno",
-        "contacto1","contacto2"
-      ].forEach(id => {
+      ["tomaDatos","apellidosEncargado","nombresEncargado","direccion",
+       "ocupacion","lugarTrabajo","apellidosAlumno","nombresAlumno",
+       "contacto1","contacto2"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = toTitleCaseExceptDe(el.value.trim());
       });
 
-      // 2) DPI solo dígitos
+      const correo = document.getElementById("correo");
+      if (correo && correo.value) correo.value = correo.value.trim().toLowerCase();
+
       const dpi = document.getElementById("dpi");
       if (dpi) {
         dpi.value = soloDigitos(dpi.value);
         dpi.setCustomValidity("");
-        // (Si más adelante quieres longitud exacta, por ej. 13, descomenta:)
-        // if (dpi.value && dpi.value.length !== 13) dpi.setCustomValidity("El DPI debe contener 13 dígitos.");
       }
 
-      // 3) Teléfonos (si hay, mínimo 8 dígitos)
       ["telResidencial","telPersonal","telTrabajo","telContacto1","telContacto2"].forEach(id => {
         const el = document.getElementById(id);
         if (el) validarTelefono(el);
       });
 
-      // 4) Correo: reforzamos rápida validación (además de type="email")
-      const correo = document.getElementById("correo");
-      if (correo && correo.value) {
-        const simpleEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!simpleEmail.test(correo.value.trim())) {
-          correo.setCustomValidity("Ingrese un correo válido.");
-        } else {
-          correo.setCustomValidity("");
-        }
-      }
-
-      // 5) Requeridos nativos (required) + customValidity
       if (!form.checkValidity()) {
+        // marca el formulario para pintar los inválidos
+        form.classList.add("was-validated");
         form.reportValidity();
-        // Enfocar el primer inválido
         const firstInvalid = form.querySelector(":invalid");
         if (firstInvalid) firstInvalid.focus();
         return false;
       }
+      // limpio clase si todo ok
+      form.classList.remove("was-validated");
       return true;
     }
 
@@ -169,8 +148,6 @@
 
     function guardarDatos() {
       const form = document.getElementById("form-nueva");
-
-      // Validar antes de enviar
       if (!validarFormulario()) return;
 
       const params = new URLSearchParams(new FormData(form));
@@ -204,7 +181,6 @@
     document.addEventListener("DOMContentLoaded", () => {
       resetIdle();
 
-      // Prefijar FECHA REGISTRO con hoy (para comodidad del usuario)
       const hoy = new Date();
       const yyyy = hoy.getFullYear();
       const mm = String(hoy.getMonth() + 1).padStart(2, "0");
@@ -213,17 +189,16 @@
       const fr = document.getElementById("fechaRegistro");
       if (fr && !fr.value) fr.value = fechaISO;
 
-      // Title Case en blur (excepto "de")
-      [
-        "tomaDatos","apellidosEncargado","nombresEncargado","direccion",
-        "ocupacion","lugarTrabajo","apellidosAlumno","nombresAlumno",
-        "contacto1","contacto2"
-      ].forEach(id => {
+      ["tomaDatos","apellidosEncargado","nombresEncargado","direccion",
+       "ocupacion","lugarTrabajo","apellidosAlumno","nombresAlumno",
+       "contacto1","contacto2"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("blur", () => el.value = toTitleCaseExceptDe(el.value));
       });
 
-      // Forzar solo dígitos en DPI y teléfonos mientras escriben
+      const correo = document.getElementById("correo");
+      if (correo) correo.addEventListener("blur", () => correo.value = correo.value.trim().toLowerCase());
+
       const dpi = document.getElementById("dpi");
       if (dpi) dpi.addEventListener("input", e => e.target.value = soloDigitos(e.target.value));
       ["telResidencial","telPersonal","telTrabajo","telContacto1","telContacto2"].forEach(id => {
@@ -246,33 +221,34 @@
     <div class="tarjeta-nueva-inscripcion">
       <h1 class="titulo-nueva">Nueva Inscripción 2026</h1>
 
+      <!-- INSTRUCCIONES -->
+      <p class="instrucciones-form">
+        <strong>Registro de Información.</strong> Ingrese los datos solicitados y, al finalizar, presione el botón <strong>Guardar</strong>.<br>
+        <span>Recuerde completar <u>todos los campos</u> y en especial los marcados con <strong>*</strong> (obligatorios).</span>
+      </p>
+
       <form id="form-nueva" class="formulario-nueva" novalidate>
-        <!-- A) FECHA REGISTRO (visible) -->
+
+        <!-- 🟦 DATOS GENERALES -->
+        <div class="subbloque">DATOS GENERALES</div>
+
         <div>
-          <label for="fechaRegistro">Fecha Registro:</label>
+          <label for="fechaRegistro">FECHA REGISTRO<span class="req">*</span>:</label>
           <input type="date" id="fechaRegistro" name="fechaRegistro" required>
         </div>
-
-        <!-- B) Toma de datos -->
         <div>
-          <label for="tomaDatos">Toma de Datos por:</label>
+          <label for="tomaDatos">TOMA DE DATOS POR<span class="req">*</span>:</label>
           <input type="text" id="tomaDatos" name="tomaDatos" required>
         </div>
-
-        <!-- C) FECHA DE REGISTRO (NO visible: la pone el servidor) -->
-
-        <!-- D) Proceso a realizar -->
         <div>
-          <label for="proceso">Proceso a Realizar:</label>
+          <label for="proceso">PROCESO A REALIZAR<span class="req">*</span>:</label>
           <select id="proceso" name="proceso" required>
             <option value="">Seleccione...</option>
             <option value="Primer Ingreso">Primer Ingreso</option>
           </select>
         </div>
-
-        <!-- E) Entrevista por -->
         <div>
-          <label for="entrevista">Entrevista por:</label>
+          <label for="entrevista">ENTREVISTA POR<span class="req">*</span>:</label>
           <select id="entrevista" name="entrevista" required>
             <option value="">Seleccione...</option>
             <option value="Evelyn Leal">Evelyn Leal</option>
@@ -284,30 +260,32 @@
           </select>
         </div>
 
-        <!-- Datos del encargado -->
+        <!-- 🟩 TITULAR -->
+        <div class="subbloque">INFORMACIÓN TITULAR (PADRE/MADRE/ENCARGADO)</div>
+
         <div>
-          <label for="apellidosEncargado">Apellidos del Encargado:</label>
+          <label for="apellidosEncargado">APELLIDOS ENCARGADO TITULAR<span class="req">*</span>:</label>
           <input type="text" id="apellidosEncargado" name="apellidosEncargado" required>
         </div>
         <div>
-          <label for="nombresEncargado">Nombres del Encargado:</label>
+          <label for="nombresEncargado">NOMBRES ENCARGADO TITULAR<span class="req">*</span>:</label>
           <input type="text" id="nombresEncargado" name="nombresEncargado" required>
         </div>
         <div>
-          <label for="dpi">No. DPI:</label>
-          <input type="text" id="dpi" name="dpi" inputmode="numeric" placeholder="Solo números">
+          <label for="dpi">NO. DPI<span class="req">*</span>:</label>
+          <input type="text" id="dpi" name="dpi" inputmode="numeric" placeholder="Solo números" required>
         </div>
         <div>
-          <label for="nacimientoEncargado">Fecha de Nacimiento:</label>
+          <label for="nacimientoEncargado">FECHA DE NACIMIENTO<span class="req">*</span>:</label>
           <input type="date" id="nacimientoEncargado" name="nacimientoEncargado"
                  onchange="calcularEdad(this,'edadEncargado')" required>
         </div>
         <div>
-          <label for="edadEncargado">Edad Actual:</label>
+          <label for="edadEncargado">EDAD ACTUAL:</label>
           <input type="number" id="edadEncargado" name="edadEncargado" readonly>
         </div>
         <div>
-          <label for="parentesco">Parentesco:</label>
+          <label for="parentesco">PARENTESCO<span class="req">*</span>:</label>
           <select id="parentesco" name="parentesco" required>
             <option value="">Seleccione...</option>
             <option value="Madre">Madre</option>
@@ -321,8 +299,8 @@
           </select>
         </div>
         <div>
-          <label for="estadoCivil">Estado Civil:</label>
-          <select id="estadoCivil" name="estadoCivil">
+          <label for="estadoCivil">ESTADO CIVIL<span class="req">*</span>:</label>
+          <select id="estadoCivil" name="estadoCivil" required>
             <option value="">Seleccione...</option>
             <option value="Soltero(a)">Soltero(a)</option>
             <option value="Casado(a)">Casado(a)</option>
@@ -331,54 +309,56 @@
           </select>
         </div>
         <div>
-          <label for="direccion">Dirección de Residencia:</label>
-          <input type="text" id="direccion" name="direccion">
+          <label for="direccion">DIRECCIÓN DE RESIDENCIA<span class="req">*</span>:</label>
+          <input type="text" id="direccion" name="direccion" required>
         </div>
         <div>
-          <label for="telResidencial">Teléfono Residencial:</label>
+          <label for="telResidencial">TELÉFONO RESIDENCIAL:</label>
           <input type="tel" id="telResidencial" name="telResidencial" inputmode="numeric" placeholder="8+ dígitos">
         </div>
         <div>
-          <label for="telPersonal">Teléfono Personal:</label>
-          <input type="tel" id="telPersonal" name="telPersonal" inputmode="numeric" placeholder="8+ dígitos">
+          <label for="telPersonal">TELÉFONO PERSONAL<span class="req">*</span>:</label>
+          <input type="tel" id="telPersonal" name="telPersonal" inputmode="numeric" placeholder="8+ dígitos" required>
         </div>
         <div>
-          <label for="correo">Correo Electrónico:</label>
-          <input type="email" id="correo" name="correo" placeholder="usuario@dominio.com">
+          <label for="correo">CORREO ELECTRÓNICO<span class="req">*</span>:</label>
+          <input type="email" id="correo" name="correo" placeholder="usuario@dominio.com" required>
         </div>
         <div>
-          <label for="ocupacion">Ocupación, Profesión u Oficio:</label>
-          <input type="text" id="ocupacion" name="ocupacion">
+          <label for="ocupacion">OCUPACIÓN, PROFESIÓN U OFICIO<span class="req">*</span>:</label>
+          <input type="text" id="ocupacion" name="ocupacion" required>
         </div>
         <div>
-          <label for="lugarTrabajo">Lugar de Trabajo:</label>
-          <input type="text" id="lugarTrabajo" name="lugarTrabajo">
+          <label for="lugarTrabajo">LUGAR DE TRABAJO<span class="req">*</span>:</label>
+          <input type="text" id="lugarTrabajo" name="lugarTrabajo" required>
         </div>
         <div>
-          <label for="telTrabajo">Teléfono de Trabajo:</label>
+          <label for="telTrabajo">TELÉFONO DE TRABAJO:</label>
           <input type="tel" id="telTrabajo" name="telTrabajo" inputmode="numeric" placeholder="8+ dígitos">
         </div>
 
-        <!-- Datos del alumno -->
+        <!-- 🟨 ALUMNO -->
+        <div class="subbloque">INFORMACIÓN ALUMNO</div>
+
         <div>
-          <label for="apellidosAlumno">Apellidos del Alumno:</label>
+          <label for="apellidosAlumno">APELLIDOS DEL ALUMNO<span class="req">*</span>:</label>
           <input type="text" id="apellidosAlumno" name="apellidosAlumno" required>
         </div>
         <div>
-          <label for="nombresAlumno">Nombre del Alumno:</label>
+          <label for="nombresAlumno">NOMBRE DEL ALUMNO<span class="req">*</span>:</label>
           <input type="text" id="nombresAlumno" name="nombresAlumno" required>
         </div>
         <div>
-          <label for="nacimientoAlumno">Fecha de Nacimiento (Alumno):</label>
+          <label for="nacimientoAlumno">FECHA DE NACIMIENTO (ALUMNO)<span class="req">*</span>:</label>
           <input type="date" id="nacimientoAlumno" name="nacimientoAlumno"
                  onchange="calcularEdad(this,'edadAlumno')" required>
         </div>
         <div>
-          <label for="edadAlumno">Edad Actual (Alumno):</label>
+          <label for="edadAlumno">EDAD ACTUAL (ALUMNO):</label>
           <input type="number" id="edadAlumno" name="edadAlumno" readonly>
         </div>
         <div>
-          <label for="jornada">Jornada del Alumno:</label>
+          <label for="jornada">JORNADA DEL ALUMNO<span class="req">*</span>:</label>
           <select id="jornada" name="jornada" onchange="actualizarGrados()" required>
             <option value="">Seleccione...</option>
             <option value="Matutina">Matutina</option>
@@ -386,20 +366,22 @@
           </select>
         </div>
         <div>
-          <label for="grado2026">Grado a cursar en 2026:</label>
+          <label for="grado2026">GRADO A CURSAR EN 2026<span class="req">*</span>:</label>
           <select id="grado2026" name="grado2026" required>
             <option value="">Seleccione una jornada primero...</option>
           </select>
         </div>
 
-        <!-- Contactos de emergencia -->
+        <!-- 🟥 CONTACTOS DE EMERGENCIA -->
+        <div class="subbloque">CONTACTOS DE EMERGENCIA</div>
+
         <div>
-          <label for="contacto1">Nombre 1er. Contacto (Emergencia):</label>
-          <input type="text" id="contacto1" name="contacto1">
+          <label for="contacto1">NOMBRE DE 1ER. CONTACTO<span class="req">*</span>:</label>
+          <input type="text" id="contacto1" name="contacto1" required>
         </div>
         <div>
-          <label for="parentesco1">Parentesco 1er. Contacto:</label>
-          <select id="parentesco1" name="parentesco1">
+          <label for="parentesco1">PARENTESCO DE 1ER. CONTACTO<span class="req">*</span>:</label>
+          <select id="parentesco1" name="parentesco1" required>
             <option value="">Seleccione...</option>
             <option value="Madre">Madre</option>
             <option value="Padre">Padre</option>
@@ -412,15 +394,15 @@
           </select>
         </div>
         <div>
-          <label for="telContacto1">Teléfono 1er. Contacto:</label>
-          <input type="tel" id="telContacto1" name="telContacto1" inputmode="numeric" placeholder="8+ dígitos">
+          <label for="telContacto1">TELÉFONO DE 1ER. CONTACTO<span class="req">*</span>:</label>
+          <input type="tel" id="telContacto1" name="telContacto1" inputmode="numeric" placeholder="8+ dígitos" required>
         </div>
         <div>
-          <label for="contacto2">Nombre 2do. Contacto (Emergencia):</label>
+          <label for="contacto2"> NOMBRE DE 2DO. CONTACTO:</label>
           <input type="text" id="contacto2" name="contacto2">
         </div>
         <div>
-          <label for="parentesco2">Parentesco 2do. Contacto:</label>
+          <label for="parentesco2"> PARENTESCO DE 2DO. CONTACTO:</label>
           <select id="parentesco2" name="parentesco2">
             <option value="">Seleccione...</option>
             <option value="Madre">Madre</option>
@@ -434,7 +416,7 @@
           </select>
         </div>
         <div>
-          <label for="telContacto2">Teléfono 2do. Contacto:</label>
+          <label for="telContacto2">TELÉFONO DE 2DO. CONTACTO:</label>
           <input type="tel" id="telContacto2" name="telContacto2" inputmode="numeric" placeholder="8+ dígitos">
         </div>
 
@@ -443,6 +425,7 @@
           <button type="button" id="btn-guardar" class="boton" onclick="guardarDatos()">Guardar</button>
           <a href="inscripciones.html" class="boton">Volver</a>
         </div>
+
       </form>
     </div>
   </div>

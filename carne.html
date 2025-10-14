@@ -10,60 +10,250 @@
 
   <div class="contenedor">
     <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
-    <h1>Olvidé mi Carné</h1>
 
     <div class="tarjeta-carne">
-      <form id="formOlvideCarne">
-        <label for="codigoAlumno" class="etiqueta-carne">Ingrese su código de alumno:</label>
-        <input type="text" id="codigoAlumno" name="codigoAlumno" required />
-        <button type="submit" class="boton">Solicitar Pase</button>
-      </form>
-      <div id="mensajeResultado" class="mensaje-carne"></div>
+      <h1 class="titulo-modulo">Olvidé mi Carnet</h1>
+
+      <!-- Filtros -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items:start;">
+        <div>
+          <label for="correoAlumno" class="etiqueta-carne" style="font-weight: normal;">Correo institucional del alumno:</label>
+          <input type="text" id="correoAlumno" name="correoAlumno" autocomplete="off" placeholder="ej: alumno@liceoclasico.edu.gt" />
+        </div>
+        <div>
+          <label class="etiqueta-carne" style="font-weight: normal;">Nombre del alumno:</label>
+          <input type="text" id="nombrePreview" readonly placeholder="—" style="background:#f3f5f7;" />
+          <span id="chipGradoJornada"
+                style="display:none;margin-top:8px;display:inline-block;padding:4px 10px;border-radius:9999px;background:#eef2f7;color:#475569;font-size:12px;border:1px solid #e5e7eb;">
+          </span>
+        </div>
+      </div>
+
+      <div id="contadorResultados" class="mensaje-carne" style="margin-top:8px; text-align:left; font-weight:normal;"></div>
+      <div id="resultados" role="list" style="margin-top:8px; text-align:left;"></div>
+
+      <button type="button" id="btnSolicitar" class="boton" style="margin-top:16px;" disabled>
+        SOLICITAR PASE
+      </button>
+
+      <!-- Panel Pase Extraordinario -->
+      <div id="panelExtra" style="display:none; margin-top:12px; text-align:left;">
+        <p class="mensaje-carne" style="margin-bottom:8px;">
+          Este alumno alcanzó el límite (3/3). Con clave de autorización puedes generar un <strong>pase extraordinario</strong>.
+        </p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="password" id="claveExtra" placeholder="Ingrese Autorización" style="flex:1; padding:10px; border:1px solid #e5e7eb; border-radius:8px;">
+          <button type="button" id="btnExtra" class="boton">PASE EXTRAORDINARIO</button>
+        </div>
+        <p id="msgExtra" class="mensaje-carne" style="margin-top:8px;"></p>
+      </div>
+
+      <div id="mensajeResultado" class="mensaje-carne" aria-live="polite"></div>
     </div>
 
     <a href="index.html" class="boton">VOLVER</a>
   </div>
 
   <script>
-    document.getElementById("formOlvideCarne").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const codigo = document.getElementById("codigoAlumno").value.trim();
-      const mensaje = document.getElementById("mensajeResultado");
-      mensaje.className = "mensaje-carne";
-      mensaje.textContent = "Procesando...";
+    const ENDPOINT = "https://script.google.com/macros/s/AKfycbxxKnkB9dM5-CiThkDEtVhLQtIjapMG-wIZD7CjGiXaaeOPg3nLPUd6ZRx4dneRJBkoBA/exec";
 
+    const inputCorreo    = document.getElementById("correoAlumno");
+    const nombrePrev     = document.getElementById("nombrePreview");
+    const chipGJ         = document.getElementById("chipGradoJornada");
+    const contRes        = document.getElementById("contadorResultados");
+    const zonaResultados = document.getElementById("resultados");
+    const btnSolicitar   = document.getElementById("btnSolicitar");
+    const mensaje        = document.getElementById("mensajeResultado");
+
+    // Extra
+    const panelExtra = document.getElementById("panelExtra");
+    const claveExtra = document.getElementById("claveExtra");
+    const btnExtra   = document.getElementById("btnExtra");
+    const msgExtra   = document.getElementById("msgExtra");
+
+    let __t, __seleccion = null;
+
+    // ====== INACTIVIDAD: regresar a index en 2 minutos ======
+    const IDLE_MS = 120000;
+    let __idleTimer;
+    function resetIdle() {
+      clearTimeout(__idleTimer);
+      __idleTimer = setTimeout(() => (window.location.href = "index.html"), IDLE_MS);
+    }
+    ["click","mousemove","keydown","touchstart","scroll","input"].forEach(ev =>
+      document.addEventListener(ev, resetIdle, { passive: true })
+    );
+    resetIdle();
+
+    // ---------- Helper robusto para fetch JSON ----------
+    async function fetchJSON(url, payload) {
+      const r = await fetch(url, { method: "POST", body: JSON.stringify(payload) });
+      const text = await r.text(); // leemos como texto SIEMPRE
+      try { return JSON.parse(text); }
+      catch (err) {
+        console.error("Respuesta no JSON del servidor:", text);
+        throw new Error("Respuesta no válida del servidor");
+      }
+    }
+
+    // Búsqueda en vivo (debounce)
+    inputCorreo.addEventListener("input", () => {
+      clearTimeout(__t);
+      const q = inputCorreo.value.trim();
+      limpiarSeleccion();
+      ocultarExtra();
+      zonaResultados.innerHTML = "";
+      zonaResultados.style.display = "none";
+      contRes.textContent = "";
+      mensaje.textContent = "";
+
+      if (q.length < 3) return;
+      contRes.textContent = "Buscando...";
+      __t = setTimeout(() => buscarPorCorreo(q), 400);
+    });
+
+    function limpiarSeleccion() {
+      __seleccion = null;
+      nombrePrev.value = "—";
+      chipGJ.style.display = "none";
+      chipGJ.textContent = "";
+      btnSolicitar.disabled = true;
+    }
+
+    function ocultarExtra() {
+      panelExtra.style.display = "none";
+      claveExtra.value = "";
+      msgExtra.textContent = "";
+      msgExtra.className = "mensaje-carne";
+    }
+
+    async function buscarPorCorreo(correoParcial) {
       try {
-        const respuesta = await fetch("https://script.google.com/macros/s/AKfycbyk_cx5jqpQiiPtITNlP5_YBAjPzOjKkoT6xOS9wSD259EqP8mW3B0Rki307thPwXPVgw/exec", {
-          method: "POST",
-          body: JSON.stringify({ codigo }),
-        });
-
-        const resultado = await respuesta.json();
-        if (resultado.mensaje.includes("éxito")) {
-          const textoPase = resultado.pases === 1 ? "PRIMER" :
-                            resultado.pases === 2 ? "SEGUNDO" :
-                            "TERCER";
-
-          const advertencia = resultado.pases === 3
-            ? "<br><strong style='color: red;'>Este es su último pase permitido. Debe reponer su carné.</strong>"
-            : "";
-
-          mensaje.className = "mensaje-carne ok";
-          mensaje.innerHTML = `
-            ✔️ Pase creado con éxito.<br>
-            Este es su <strong>${textoPase}</strong> pase por olvido de carné.
-            ${advertencia}
-            <br>Verifique su correo para más información.`;
-        } else {
-          mensaje.className = "mensaje-carne error";
-          mensaje.textContent = resultado.mensaje;
-        }
-      } catch (error) {
+        const data = await fetchJSON(ENDPOINT, { modo: "buscarPorCorreo", correo: correoParcial });
+        if (!data.ok || !Array.isArray(data.matches)) return renderResultados([]);
+        renderResultados(data.matches);
+      } catch (err) {
+        renderResultados([]);
         mensaje.className = "mensaje-carne error";
         mensaje.textContent = "Error al conectar con el servidor.";
       }
+    }
 
-      setTimeout(() => window.location.href = "index.html", 30000);
+    function renderResultados(matches) {
+      zonaResultados.innerHTML = "";
+      limpiarSeleccion();
+
+      const n = matches.length;
+      contRes.textContent = n ? `${n} resultado(s).` : "0 resultado(s).";
+      zonaResultados.style.display = n ? "block" : "none";
+
+      matches.forEach((item) => {
+        const card = document.createElement("div");
+        card.role = "listitem";
+        card.tabIndex = 0;
+        card.style.cssText = `
+          background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+          padding:14px 16px; margin-top:12px; cursor:pointer;
+          box-shadow:0 1px 2px rgba(0,0,0,0.04);
+        `;
+
+        const titulo = document.createElement("div");
+        titulo.textContent = item.nombre || "";
+        titulo.style.cssText = "font-weight:700; font-size:16px; color:#2c3e50; text-align:center;";
+
+        const sub = document.createElement("div");
+        sub.textContent = `${item.correo_alumno || ""} · ${item.grado || ""} · ${item.jornada || ""}`;
+        sub.style.cssText = "margin-top:6px; font-size:14px; color:#475569; text-align:center;";
+
+        card.appendChild(titulo);
+        card.appendChild(sub);
+
+        const elegir = () => {
+          __seleccion = item;
+          nombrePrev.value = item.nombre || "—";
+          const chipTxt = `${item.grado || ""} · ${item.jornada || ""}`.trim();
+          if (chipTxt.replace(/[·\s]/g,"")) { chipGJ.textContent = chipTxt; chipGJ.style.display = "inline-block"; }
+          else { chipGJ.style.display = "none"; chipGJ.textContent = ""; }
+
+          inputCorreo.value = "";
+          inputCorreo.blur();
+          inputCorreo.placeholder = item.correo_alumno || "correo@liceoclasico.edu.gt";
+          zonaResultados.innerHTML = "";
+          zonaResultados.style.display = "none";
+          contRes.textContent = "";
+          btnSolicitar.disabled = false;
+          ocultarExtra();
+        };
+
+        card.addEventListener("click", elegir);
+        card.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); elegir(); }
+        });
+
+        zonaResultados.appendChild(card);
+      });
+    }
+
+    // Registrar pase normal
+    btnSolicitar.addEventListener("click", async () => {
+      if (!__seleccion || !__seleccion.codigo) return;
+
+      mensaje.className = "mensaje-carne";
+      mensaje.textContent = "Procesando...";
+      btnSolicitar.disabled = true;
+      ocultarExtra();
+
+      try {
+        const res = await fetchJSON(ENDPOINT, { codigo: __seleccion.codigo });
+
+        if (res.mensaje && res.mensaje.includes("éxito")) {
+          const textoPase = res.pases === 1 ? "PRIMER" : res.pases === 2 ? "SEGUNDO" : "TERCER";
+          const advertencia = res.pases === 3
+            ? "<br><strong style='color: red;'>Este es su último pase permitido. Debe reponer su carné.</strong>"
+            : "";
+          mensaje.className = "mensaje-carne ok";
+          mensaje.innerHTML = `✔️ Pase creado con éxito.<br>Este es su <strong>${textoPase}</strong> pase por olvido de carné.${advertencia}<br>Verifique su correo para más información.`;
+          setTimeout(() => window.location.href = "index.html", 30000);
+        } else {
+          if (res.mensaje && res.mensaje.toLowerCase().includes("límite alcanzado")) {
+            panelExtra.style.display = "block";
+            claveExtra.focus();
+          }
+          mensaje.className = "mensaje-carne error";
+          mensaje.textContent = res.mensaje || "No fue posible registrar el pase.";
+          btnSolicitar.disabled = false;
+        }
+      } catch (err) {
+        mensaje.className = "mensaje-carne error";
+        mensaje.textContent = "Error al conectar con el servidor.";
+        btnSolicitar.disabled = false;
+      }
+    });
+
+    // Pase Extraordinario
+    btnExtra.addEventListener("click", async () => {
+      if (!__seleccion || !__seleccion.codigo) return;
+      msgExtra.className = "mensaje-carne";
+      msgExtra.textContent = "Validando clave...";
+      btnExtra.disabled = true;
+
+      try {
+        const res = await fetchJSON(ENDPOINT, { modo: "paseExtra", codigo: __seleccion.codigo, clave: claveExtra.value.trim() });
+        if (res.ok) {
+          mensaje.className = "mensaje-carne ok";
+          mensaje.innerHTML = `✔️ Pase <strong>EXTRAORDINARIO ${res.extra}</strong> generado con éxito.<br>Verifique su correo para más información.`;
+          panelExtra.style.display = "none";
+          setTimeout(() => window.location.href = "index.html", 30000);
+        } else {
+          msgExtra.className = "mensaje-carne error";
+          msgExtra.textContent = res.mensaje || "No fue posible generar el pase extraordinario.";
+        }
+      } catch (err) {
+        msgExtra.className = "mensaje-carne error";
+        msgExtra.textContent = "Error al conectar con el servidor.";
+      } finally {
+        btnExtra.disabled = false;
+      }
     });
   </script>
 

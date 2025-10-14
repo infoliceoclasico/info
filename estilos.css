@@ -72,14 +72,18 @@ body {
 .formulario label {
     font-weight: bold;
     text-align: left;
+    font-size: 15px;
+    color: #2c3e50;
 }
 
 .formulario input,
 .formulario select {
     padding: 10px;
-    font-size: 16px;
+    font-size: 15px;
+    color: #2c3e50;
     border: 1px solid #ccc;
     border-radius: 6px;
+    background-color: #fff;
 }
 
 .botones {
@@ -88,6 +92,7 @@ body {
     gap: 10px;
     margin-top: 20px;
 }
+
 
 /* ====================================== */
 /* ============ ASISTENCIA ============== */
@@ -142,7 +147,7 @@ button.boton:hover {
 
 .etiqueta-correos {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: bold;
   font-size: 18px;
   color: #2c3e50;
@@ -155,7 +160,7 @@ button.boton:hover {
   border-radius: 8px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
 }
 
 .correo-docente {
@@ -175,7 +180,7 @@ button.boton:hover {
   max-width: 600px;
   margin: 40px auto;
   background-color: white;
-  padding: 30px;
+  padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -183,7 +188,7 @@ button.boton:hover {
 
 .etiqueta-carne {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: bold;
   font-size: 18px;
   color: #2c3e50;
@@ -197,7 +202,7 @@ button.boton:hover {
   border-radius: 8px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
 }
 
 .mensaje-carne {
@@ -245,7 +250,7 @@ button.boton:hover {
   border-radius: 8px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .mensaje-login {
@@ -264,7 +269,8 @@ button.boton:hover {
   font-weight: bold;
   color: #2c3e50;
   margin-top: 20px;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
+    text-align: center;
 }
 
 
@@ -275,7 +281,7 @@ button.boton:hover {
 .bienvenida-usuario {
   font-size: 20px;
   color: #2c3e50;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   font-weight: bold;
 }
 
@@ -295,7 +301,7 @@ button.boton:hover {
   display: flex;
   gap: 15px;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   flex-wrap: wrap;
 }
 
@@ -481,14 +487,14 @@ button.boton:hover {
   font-size: 28px;
   font-weight: bold;
   color: #2c3e50;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
 }
 
 .botones-inscripcion {
   display: grid;
   grid-template-columns: 1fr 1fr; /* dos columnas */
   gap: 20px; /* espacio entre botones */
-  margin-bottom: 25px;
+  margin-bottom: 15px;
 }
 
 .botones-inscripcion .boton {
@@ -529,7 +535,7 @@ button.boton:hover {
   font-size: 28px;
   font-weight: bold;
   color: #2c3e50;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   text-align: center;
 }
 
@@ -701,3 +707,219 @@ button.boton:hover {
 
 /* Selects a ancho completo (consistente con inputs) */
 .formulario-nueva select { width: 100%; }
+
+
+
+
+/* ====================================== */
+/* ===== REPOSICION ============== */
+/* ====================================== */
+.mensaje {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+.mensaje.ok {
+  color: #0a7d28;
+}
+.mensaje.error {
+  color: #b00020;
+}
+
+/* En resultados, reutilizamos patrones del buscador existente */
+#pillMeta {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+/* Select consistente con inputs (ya estaba, reforzamos) */
+.formulario-nueva select {
+  width: 100%;
+}
+
+/* Accesibilidad: focus visible en items */
+.item-resultado:focus {
+  outline: 2px solid #2c3e50;
+  outline-offset: 2px;
+}
+
+
+
+/* =====/* =====/* =====/* =====/* =====/* =====/* =====/* =====
+/* ===== Labels/títulos en mayúsculas con énfasis sutil ===== */
+/* ===== Encabezados (sobrios, legibles) ===== */
+
+
+/* ===== Título y subtítulo al estilo de la imagen ===== */
+.titulo-nueva {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #2e4050;          /* tono del ejemplo */
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+.descripcion-form {
+  text-align: center;
+  font-weight: 700;        /* estilo "Seleccione un docente:" */
+  color: #2e4050;
+  margin: 0 0 18px 0;
+  font-size: 16px;
+}
+
+/* ===== Barrita vertical en cada label ===== */
+.formulario label {
+  display: block;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #2c3e50;
+  margin-bottom: 6px;
+  position: relative;
+  padding-left: 14px;         /* espacio para la barrita */
+  line-height: 1.2;
+}
+
+.formulario label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 4px;
+  height: 18px;
+  background: #178a96;        /* teal */
+  border-radius: 2px;
+}
+
+/* Separación y full width */
+.formulario .grupo-campo { margin-bottom: 14px; }
+.formulario select,
+.formulario input[type="text"],
+.formulario input[type="tel"],
+.formulario input[type="email"],
+.formulario input[type="number"],
+.formulario textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ===== Botones como la imagen ===== */
+.botones {
+  display: flex;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+/* Botones */
+.boton {
+  border: none;
+  padding: 16px 20px;
+  border-radius: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 14px;   /* ← mismo tamaño para ambos */
+}
+
+.boton-primario {
+  background: #2e4050;
+  color: #fff;
+  flex: 1;           /* Guardar grande a la izquierda */
+}
+
+.boton-secundario {
+  background: #2e4050;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.boton-primario:hover,
+.boton-secundario:hover {
+  filter: brightness(1.05);
+}
+
+
+
+
+
+
+/* ================================
+   INSTRUCCIONES BAJO EL TÍTULO
+   ================================ */
+.instrucciones-form{
+  margin: -6px 0 18px 0;
+  color:#34495e;
+  text-align:center;
+  font-size: 15px;
+}
+.instrucciones-form strong{ font-weight: 800; }
+
+/* ============================================
+   LABELS MAYÚSCULAS + FRANJA IZQUIERDA
+   (solo afecta a este formulario)
+   ============================================ */
+.formulario-nueva label{
+  text-transform: uppercase;
+  color: #2c3e50;
+  font-weight: 700;
+  letter-spacing: .2px;
+  position: relative;
+  padding-left: 12px; /* espacio para la franja */
+  display:inline-block;
+  margin-bottom: 6px;
+}
+.formulario-nueva label::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 18px;
+  border-radius: 3px;
+  background:#1aa1a8; /* mismo tono que usaste en registro.html */
+}
+
+/* Asterisco de obligatorios */
+.req{
+  color:#c0392b;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+/* ============================================
+   ESTADO INVÁLIDO CUANDO SE INTENTA GUARDAR
+   (se activa con .was-validated desde JS)
+   ============================================ */
+.formulario-nueva.was-validated input:invalid,
+.formulario-nueva.was-validated select:invalid{
+  border-color:#e74c3c !important;
+  box-shadow: 0 0 0 3px rgba(231,76,60,.15);
+}
+
+/* pinta el label del campo inválido en rojo */
+.formulario-nueva.was-validated div:has(:invalid) > label{
+  color:#e74c3c !important;
+}
+
+/* focus visible */
+.formulario-nueva input:focus,
+.formulario-nueva select:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52,152,219,.2);
+  border-color:#3498db;
+}
+
+/* opcional: separador de subbloques ya existente,
+   si deseas reforzar contraste del título del bloque */
+.subbloque{
+  font-weight: 800;
+}
+
+
+
+
+
+

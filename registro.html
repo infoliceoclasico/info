@@ -1,165 +1,255 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registro de Información</title>
-  <link rel="stylesheet" href="estilos.css">
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const jornadaSelect = document.getElementById("jornada");
-      const nivelSelect = document.getElementById("nivel");
-      const gradoSelect = document.getElementById("grado");
-
-      const opcionesPorJornada = {
-        "Matutina": {
-          "Preprimaria": ["Kínder", "Párvulos", "Preparatoria"],
-          "Primaria": ["1ro Primaria", "2do Primaria", "3ro Primaria", "4to Primaria", "5to Primaria", "6to Primaria"],
-          "Básicos": ["1ro Básico", "2do Básico", "3ro Básico"],
-          "Diversificado": [
-            "4to Computación", "5to Computación",
-            "4to Ciencias y Letras", "5to Ciencias y Letras",
-            "4to Dibujo Técnico", "5to Dibujo Técnico",
-            "4to Perito Contador", "5to Perito Contador", "6to Perito Contador",
-            "4to Administración", "5to Administración", "6to Administración"
-          ]
-        },
-        "Fin de Semana": {
-          "Básicos": ["1ro Básico", "2do Básico", "3ro Básico", "Básicos por Madurez"],
-          "Diversificado": [
-            "4to Computación", "5to Computación",
-            "4to Ciencias y Letras", "5to Ciencias y Letras",
-            "4to Perito Contador", "5to Perito Contador", "6to Perito Contador",
-            "4to Administración", "5to Administración", "6to Administración",
-            "Bachillerato por Madurez"
-          ]
-        }
-      };
-
-      function actualizarNiveles() {
-        const jornada = jornadaSelect.value;
-        nivelSelect.innerHTML = "<option value=''>Seleccione...</option>";
-        gradoSelect.innerHTML = "<option value=''>Seleccione un nivel primero...</option>";
-
-        if (opcionesPorJornada[jornada]) {
-          Object.keys(opcionesPorJornada[jornada]).forEach(function (nivel) {
-            const option = document.createElement("option");
-            option.value = nivel;
-            option.textContent = nivel;
-            nivelSelect.appendChild(option);
-          });
-        }
-      }
-
-      function actualizarGrados() {
-        const jornada = jornadaSelect.value;
-        const nivel = nivelSelect.value;
-        gradoSelect.innerHTML = "<option value=''>Seleccione...</option>";
-
-        if (opcionesPorJornada[jornada] && opcionesPorJornada[jornada][nivel]) {
-          opcionesPorJornada[jornada][nivel].forEach(function (grado) {
-            const option = document.createElement("option");
-            option.value = grado;
-            option.textContent = grado;
-            gradoSelect.appendChild(option);
-          });
-        }
-      }
-
-      jornadaSelect.addEventListener("change", actualizarNiveles);
-      nivelSelect.addEventListener("change", actualizarGrados);
-    });
-  </script>
+  <link rel="stylesheet" href="estilos.css"/>
 </head>
 <body>
+
+  <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
+
   <div class="contenedor">
-  <header style="margin-bottom: 10px;">
-    <img src="imagenes/logo1.png" alt="Logo MUEBLE" class="logo">
-  </header>
+    <form id="form-registro" class="formulario" autocomplete="off">
+      <!-- Título y descripción dentro de la tarjeta -->
+      <h1 class="titulo-nueva">Registro de Información</h1>
+      <p class="descripcion-form">
+        Ingrese los datos solicitados y al finalizar presione el botón <strong>Guardar</strong>.
+      </p>
 
-    <h1>Registro de Información</h1>
-    <form id="formulario-registro" class="formulario">
-      
-      <label for="nombre-padre">Nombre del Padre/Madre:</label>
-      <input type="text" id="nombre-padre" name="nombre-padre" required>
+      <!-- Campos -->
+      <div class="grupo-campo">
+        <label for="nombreEncargado">Nombre del Padre/Madre:</label>
+        <input type="text" id="nombreEncargado" required />
+      </div>
 
-      <label for="telefono">Número de Teléfono 1:</label>
-      <input type="tel" id="telefono" name="telefono" required>
+      <div class="grupo-campo">
+        <label for="telefono1">Número de Teléfono 1:</label>
+        <input type="tel" id="telefono1" required />
+      </div>
 
-      <label for="telefono2">Número de Teléfono 2 (opcional):</label>
-      <input type="tel" id="telefono2" name="telefono2">
+      <div class="grupo-campo">
+        <label for="telefono2">Número de Teléfono 2:</label>
+        <input type="tel" id="telefono2" />
+      </div>
 
-      <label for="correo">Correo Electrónico:</label>
-      <input type="email" id="correo" name="correo" required>
+      <div class="grupo-campo">
+        <label for="correo">Correo Electrónico:</label>
+        <input type="email" id="correo" />
+      </div>
 
-      <label for="nombre-alumno">Nombre del Alumno:</label>
-      <input type="text" id="nombre-alumno" name="nombre-alumno" required>
+      <div class="grupo-campo">
+        <label for="nombreAlumno">Nombre del Alumno:</label>
+        <input type="text" id="nombreAlumno" required />
+      </div>
 
-      <label for="edad">Edad:</label>
-      <input type="number" id="edad" name="edad" required>
+      <div class="grupo-campo">
+        <label for="edad">Edad:</label>
+        <input type="number" id="edad" min="1" max="99" />
+      </div>
 
-      <label for="jornada">Jornada:</label>
-      <select id="jornada" name="jornada" required>
-        <option value="">Seleccione...</option>
-        <option value="Matutina">Matutina</option>
-        <option value="Fin de Semana">Fin de Semana</option>
-      </select>
+      <div class="grupo-campo">
+        <label for="jornada">Jornada:</label>
+        <select id="jornada" required>
+          <option value="" disabled selected>Seleccione…</option>
+          <option>Matutina</option>
+          <option>Fin de Semana</option>
+        </select>
+      </div>
 
-      <label for="nivel">Nivel Educativo:</label>
-      <select id="nivel" name="nivel" required>
-        <option value="">Seleccione una jornada primero...</option>
-      </select>
+      <div class="grupo-campo">
+        <label for="nivel">Nivel Educativo:</label>
+        <select id="nivel" required>
+          <option value="" disabled selected>Seleccione…</option>
+        </select>
+      </div>
 
-      <label for="grado">Grado de Interés:</label>
-      <select id="grado" name="grado" required>
-        <option value="">Seleccione un nivel primero...</option>
-      </select>
+      <div class="grupo-campo">
+        <label for="grado">Grado de Interés:</label>
+        <select id="grado" required>
+          <option value="" disabled selected>Seleccione…</option>
+        </select>
+      </div>
+
+      <!-- Solo para Diversificado (según carrera) -->
+      <div class="grupo-campo" id="grupo-ciclo" style="display:none;">
+        <label for="ciclo">Ciclo:</label>
+        <select id="ciclo">
+          <option value="" disabled selected>Seleccione…</option>
+        </select>
+      </div>
 
       <div class="botones">
-        <button type="button" id="guardar" class="boton">Guardar</button>
-        <a href="index.html" class="boton">Volver</a>
+        <button type="submit" class="boton boton-primario">Guardar</button>
+        <a href="index.html" class="boton boton-secundario">Volver</a>
       </div>
     </form>
   </div>
 
   <script>
-    document.getElementById("guardar").addEventListener("click", function () {
-      const formData = new URLSearchParams();
-      formData.append("nombrePadre", document.getElementById("nombre-padre").value);
-      formData.append("telefono", document.getElementById("telefono").value);
-      formData.append("telefono2", document.getElementById("telefono2").value);
-      formData.append("correo", document.getElementById("correo").value);
-      formData.append("nombreAlumno", document.getElementById("nombre-alumno").value);
-      formData.append("edad", document.getElementById("edad").value);
-      formData.append("jornada", document.getElementById("jornada").value);
-      formData.append("nivel", document.getElementById("nivel").value);
-      formData.append("grado", document.getElementById("grado").value);
+    // ============================
+    //  Encadenado: Jornada → Nivel
+    // ============================
+    const jornadaSelect = document.getElementById('jornada');
+    const nivelSelect   = document.getElementById('nivel');
+    const gradoSelect   = document.getElementById('grado');
+    const cicloGroup    = document.getElementById('grupo-ciclo');
+    const cicloSelect   = document.getElementById('ciclo');
 
-      fetch("https://script.google.com/macros/s/AKfycbyXQO0uwa3cXQH_QXGLuVwFfubObjmIO6tybUx_4Iu6WRFbKQX8SAd3GT-IEGZWza3Tdg/exec", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formData
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("Error de red");
-        return response.text();
-      })
-      .then(text => {
-        if (text.trim() === "OK") {
-          alert("Registro guardado correctamente.");
-          document.getElementById("formulario-registro").reset();
+    // Niveles por Jornada
+    const nivelesPorJornada = {
+      "Matutina": ["Preprimaria", "Primaria", "Básicos", "Diversificado"],
+      "Fin de Semana": ["Básicos", "Básicos por Madurez", "Diversificado"]
+    };
+
+    // Carreras por Jornada (cuando Nivel = Diversificado)
+    const carrerasDiversificado = {
+      "Matutina": [
+        "Bachillerato en Computación",
+        "Bachillerato en Dibujo Técnico",
+        "Bachillerato en Ciencias y Letras",
+        "Perito Contador",
+        "Perito en Administración de Empresas"
+      ],
+      "Fin de Semana": [
+        "Bachillerato en Computación",
+        "Bachillerato en Ciencias y Letras",
+        "Perito Contador",
+        "Perito en Administración de Empresas",
+        "Bachillerato por Madurez"
+      ]
+    };
+
+    // Ciclos por carrera
+    const ciclosPorCarrera = {
+      "Bachillerato en Computación": ["4to.", "5to."],
+      "Bachillerato en Dibujo Técnico": ["4to.", "5to."],
+      "Bachillerato en Ciencias y Letras": ["4to.", "5to."],
+      "Perito Contador": ["4to.", "5to.", "6to."],
+      "Perito en Administración de Empresas": ["4to.", "5to.", "6to."],
+      "Bachillerato por Madurez": ["5to."]   // solo 5to.
+    };
+
+    function obtenerGrados(jornada, nivel) {
+      if (!jornada || !nivel) return [];
+      if (jornada === "Matutina") {
+        if (nivel === "Preprimaria") return ["Kínder", "Párvulos", "Preparatoria"];
+        if (nivel === "Primaria") return ["1ro. Primaria","2do. Primaria","3ro. Primaria","4to. Primaria","5to. Primaria","6to. Primaria"];
+        if (nivel === "Básicos") return ["1ro. Básico","2do. Básico","3ro. Básico"];
+        if (nivel === "Diversificado") return carrerasDiversificado["Matutina"];
+      }
+      if (jornada === "Fin de Semana") {
+        if (nivel === "Básicos") return ["1ro. Básico","2do. Básico","3ro. Básico","1ro. Básico por Madurez","3ro. Básico por Madurez"];
+        if (nivel === "Básicos por Madurez") return ["1ro. Básico por Madurez","3ro. Básico por Madurez"];
+        if (nivel === "Diversificado") return carrerasDiversificado["Fin de Semana"];
+      }
+      return [];
+    }
+
+    function llenarSelect(select, opciones, placeholder = "Seleccione…") {
+      select.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.textContent = placeholder;
+      opt0.disabled = true;
+      opt0.selected = true;
+      select.appendChild(opt0);
+      opciones.forEach(txt => {
+        const opt = document.createElement("option");
+        opt.value = txt;
+        opt.textContent = txt;
+        select.appendChild(opt);
+      });
+    }
+
+    function resetCiclo() {
+      cicloGroup.style.display = "none";
+      cicloSelect.removeAttribute("required");
+      llenarSelect(cicloSelect, []);
+    }
+
+    jornadaSelect.addEventListener('change', () => {
+      llenarSelect(nivelSelect, nivelesPorJornada[jornadaSelect.value] || []);
+      llenarSelect(gradoSelect, []);
+      resetCiclo();
+    });
+
+    nivelSelect.addEventListener('change', () => {
+      const grados = obtenerGrados(jornadaSelect.value, nivelSelect.value);
+      llenarSelect(gradoSelect, grados);
+      resetCiclo();
+    });
+
+    gradoSelect.addEventListener('change', () => {
+      const nivel = nivelSelect.value;
+      const carrera = gradoSelect.value;
+      if (nivel === "Diversificado" && carrera && ciclosPorCarrera[carrera]) {
+        llenarSelect(cicloSelect, ciclosPorCarrera[carrera]);
+        cicloGroup.style.display = "block";
+        cicloSelect.setAttribute("required", "required");
+      } else {
+        resetCiclo();
+      }
+    });
+
+    // ============================
+    //  Envío al Apps Script (claves esperadas)
+    // ============================
+    document.getElementById('form-registro').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Normalizar correo a minúsculas
+      const correo = document.getElementById('correo');
+      if (correo && correo.value) correo.value = correo.value.trim().toLowerCase();
+
+      // Enviar con las claves que espera tu Apps Script
+      const params = new URLSearchParams();
+      params.append("nombrePadre",  document.getElementById('nombreEncargado').value.trim());
+      params.append("telefono",     document.getElementById('telefono1').value.trim());
+      params.append("telefono2",    document.getElementById('telefono2').value.trim());
+      params.append("correo",       document.getElementById('correo').value.trim());
+      params.append("nombreAlumno", document.getElementById('nombreAlumno').value.trim());
+      params.append("edad",         document.getElementById('edad').value.trim());
+      params.append("jornada",      document.getElementById('jornada').value);
+      params.append("nivel",        document.getElementById('nivel').value);
+      params.append("grado",        document.getElementById('grado').value);
+      if (cicloGroup.style.display === "block" && cicloSelect.value) {
+        params.append("ciclo", cicloSelect.value);
+      }
+
+      const url = "https://script.google.com/macros/s/AKfycbyXQO0uwa3cXQH_QXGLuVwFfubObjmIO6tybUx_4Iu6WRFbKQX8SAd3GT-IEGZWza3Tdg/exec";
+
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params.toString()
+        });
+        const texto = await resp.text();
+        if (texto.trim() === "OK") {
+          alert("Registro guardado correctamente");
+          e.target.reset();
           window.location.href = "index.html";
         } else {
-          alert("Ocurrió un error inesperado. Intente nuevamente.");
+          alert("Ocurrió un problema al guardar. Inténtelo de nuevo.");
         }
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        alert("Ocurrió un error al guardar los datos.");
-      });
+      } catch (err) {
+        alert("Error al conectar con el servidor.");
+      }
     });
   </script>
+  <script>
+  // Inactividad: 120 s → index
+  let __idleTimer;
+  function resetIdle(){
+    clearTimeout(__idleTimer);
+    __idleTimer = setTimeout(() => (window.location.href = "index.html"), 120000);
+  }
+  ["mousemove","keypress","click","touchstart","scroll"].forEach(ev =>
+    document.addEventListener(ev, resetIdle, { passive: true })
+  );
+  resetIdle(); // inicia el conteo al cargar
+</script>
+
 </body>
 </html>
