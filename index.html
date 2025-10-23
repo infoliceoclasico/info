@@ -32,10 +32,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 60px; /* antes 30px, ahora más cerrado visualmente */
+      gap: 60px;
       flex-wrap: nowrap;
       margin-top: -10px;
-      max-width: 1100px; /* controla el ancho total del bloque */
+      max-width: 1100px;
     }
 
     .grid-2columnas {
@@ -45,7 +45,12 @@
       justify-content: center;
     }
 
+    /* ================================
+       BOTONES CON EFECTO DE BRILLO
+       ================================ */
     .boton-menu {
+      position: relative;
+      overflow: hidden;
       background-color: #2c3e50;
       color: white;
       text-align: center;
@@ -65,18 +70,60 @@
       background-color: #34495e;
     }
 
+    /* Brillo animado */
+    .boton-menu::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      transform: skewX(-25deg);
+      animation: shine 2s ease-out forwards;
+    }
+
+    @keyframes shine {
+      0% { left: -75%; }
+      100% { left: 125%; }
+    }
+
     .shark {
       width: 300px;
       height: auto;
       margin-top: -20px;
     }
 
-    /* Responsivo */
+    /* ================================
+       RESPONSIVO
+       ================================ */
     @media (max-width: 1000px) {
       .bloque-central {
         flex-direction: column;
         max-width: 90%;
         gap: 20px;
+      }
+      .shark {
+        width: 200px;
+        margin-top: 10px;
+      }
+      .grid-2columnas {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .grid-2columnas {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .boton-menu {
+        width: 100%;
       }
       .shark {
         width: 180px;
