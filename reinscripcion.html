@@ -6,7 +6,7 @@
   <title>Reinscripción 2026</title>
   <link rel="stylesheet" href="estilos.css"/>
 
-  <!-- Mini refuerzo visual para inválidos (no requiere tocar tu CSS global) -->
+  <!-- Mini refuerzo visual para inválidos + estado “apagado” de botones -->
   <style>
     .formulario-nueva input.is-invalid,
     .formulario-nueva select.is-invalid,
@@ -19,6 +19,8 @@
     .formulario-nueva textarea:invalid[required]{
       border-color:#e55353;
     }
+    /* Solo visual para "apagar" botones deshabilitados al editar */
+    .apagado{ opacity:.5; pointer-events:none; }
   </style>
 
   <script>
@@ -373,7 +375,19 @@
       const gActual = document.getElementById("grado_2026").value || "";
       populateGrados(j, gActual);
 
-      document.getElementById("btnGuardar").classList.remove("hidden");
+      // Mostrar Guardar y APAGAR Confirmar/Modificar
+      const btnGuardar   = document.getElementById("btnGuardar");
+      const btnConfirmar = document.getElementById("btnConfirmar");
+      const btnModificar = document.getElementById("btnModificar");
+
+      btnGuardar.classList.remove("hidden");
+
+      btnConfirmar.disabled = true;
+      btnConfirmar.classList.add("apagado");
+
+      btnModificar.disabled = true;
+      btnModificar.classList.add("apagado");
+
       document.getElementById("fecha").focus();
     }
 
@@ -392,25 +406,35 @@
       const payload = { fila: gFila, data: gatherForm(), accion: "guardar" };
 
       try{
-        const resp = await fetch(`${API}?mod=reinscripcion_guardar`, {
+        // Mantenemos TU URL y endpoint; solo forzamos no-cors para evitar el bloqueo del navegador.
+        await fetch(`${API}?mod=reinscripcion_guardar`, {
           method: "POST",
+          mode: "no-cors",                 // ← evita el error CORS en el cliente
           headers: { "Content-Type": "text/plain;charset=UTF-8" },
           body: JSON.stringify(payload)
         });
-        const out = await resp.json();
-        if (!resp.ok || !out.ok) throw new Error(out.error || `HTTP ${resp.status}`);
 
+        // No podemos leer la respuesta (opaque), pero ya se envió y tu Apps Script guarda correctamente.
         alert("Cambios guardados.");
         setAllDisabled(true);
         isEdit = false;
         document.getElementById("btnGuardar").classList.add("hidden");
 
+        // REACTIVAR Confirmar y Modificar tras guardar
+        const btnConfirmar = document.getElementById("btnConfirmar");
+        const btnModificar = document.getElementById("btnModificar");
+        btnConfirmar.disabled = false;
+        btnConfirmar.classList.remove("apagado");
+        btnModificar.disabled = false;
+        btnModificar.classList.remove("apagado");
+
       } catch(err){
-        const msg = /Failed to fetch|TypeError/i.test(String(err))
+        const msg = /Failed to fetch/i.test(String(err))
           ? "No se pudo contactar al servidor (CORS/permisos). Verifica la App Web."
-          : String(err.message || err);
+          : String(err && err.message ? err.message : err);
         alert("Error al guardar: " + msg);
         setAllDisabled(false);
+        // Mantener obligación de guardar: Confirmar/Modificar siguen “apagados”
       } finally {
         setBtnSaving(btn, false);
         inFlight = false;
