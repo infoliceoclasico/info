@@ -5,86 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registro de Información</title>
   <link rel="stylesheet" href="estilos.css"/>
+
+  <!-- Estilos mínimos SOLO para el MsgBox -->
+  <style>
+    .mbox-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.4);
+      display:none; align-items:center; justify-content:center; z-index:9999;
+    }
+    .mbox{
+      width:min(520px, 92vw); background:#fff; border-radius:12px;
+      box-shadow:0 20px 48px rgba(0,0,0,.25); padding:18px 18px 14px;
+      border:1px solid #e6e6e6;
+    }
+    .mbox-head{
+      display:flex; align-items:center; gap:10px; margin-bottom:8px;
+      color:#1a7f45; font-weight:800; font-size:18px;
+    }
+    .mbox-icon{
+      width:22px; height:22px; border-radius:6px; background:#1a7f45;
+      color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:900;
+    }
+    .mbox-body{ color:#2c3e50; font-size:14px; margin-bottom:12px; }
+    .mbox-actions{ display:flex; justify-content:flex-end; gap:10px; }
+    .mbox-btn{
+      border:none; padding:10px 16px; border-radius:10px; font-weight:800; text-transform:uppercase;
+      background:#2e4050; color:#fff; cursor:pointer;
+    }
+    .mbox-backdrop.mostrar{ display:flex; }
+  </style>
 </head>
 <body>
 
+  <!-- Logo superior -->
   <img src="imagenes/logo1.png" alt="Logo Liceo Clásico" class="logo" />
 
   <div class="contenedor">
-    <form id="form-registro" class="formulario" autocomplete="off">
-      <!-- Título y descripción dentro de la tarjeta -->
+    <!-- Tarjeta principal -->
+    <form id="form-registro" class="formulario" autocomplete="off" novalidate>
+      <!-- Título y texto guía -->
       <h1 class="titulo-nueva">Registro de Información</h1>
       <p class="descripcion-form">
         Ingrese los datos solicitados y al finalizar presione el botón <strong>Guardar</strong>.
       </p>
 
-      <!-- Campos -->
-      <div class="grupo-campo">
-        <label for="nombreEncargado">Nombre del Padre/Madre:</label>
-        <input type="text" id="nombreEncargado" required />
+      <!-- ===== Datos de contacto ===== -->
+      <div class="grupo-campo req" id="gc-nombrePadre">
+        <label for="nombrePadre">Nombre del Padre/Madre:</label>
+        <input type="text" id="nombrePadre" name="nombrePadre" required />
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
-      <div class="grupo-campo">
-        <label for="telefono1">Número de Teléfono 1:</label>
-        <input type="tel" id="telefono1" required />
+      <div class="grupo-campo req" id="gc-telefono">
+        <label for="telefono">Número de Teléfono 1:</label>
+        <input type="tel" id="telefono" name="telefono" required />
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
-      <div class="grupo-campo">
+      <div class="grupo-campo" id="gc-telefono2">
         <label for="telefono2">Número de Teléfono 2:</label>
-        <input type="tel" id="telefono2" />
+        <input type="tel" id="telefono2" name="telefono2" />
       </div>
 
-      <div class="grupo-campo">
+      <div class="grupo-campo" id="gc-correo">
         <label for="correo">Correo Electrónico:</label>
-        <input type="email" id="correo" />
+        <input type="email" id="correo" name="correo" />
       </div>
 
-      <div class="grupo-campo">
+      <div class="grupo-campo req" id="gc-nombreAlumno">
         <label for="nombreAlumno">Nombre del Alumno:</label>
-        <input type="text" id="nombreAlumno" required />
+        <input type="text" id="nombreAlumno" name="nombreAlumno" required />
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
-      <div class="grupo-campo">
+      <div class="grupo-campo" id="gc-edad">
         <label for="edad">Edad:</label>
-        <input type="number" id="edad" min="1" max="99" />
+        <input type="number" id="edad" name="edad" min="1" max="99" />
       </div>
 
-      <div class="grupo-campo">
+      <!-- ===== Interés académico ===== -->
+      <div class="grupo-campo req" id="gc-jornada">
         <label for="jornada">Jornada:</label>
-        <select id="jornada" required>
+        <select id="jornada" name="jornada" required>
           <option value="" disabled selected>Seleccione…</option>
           <option>Matutina</option>
           <option>Fin de Semana</option>
         </select>
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
-      <div class="grupo-campo">
+      <div class="grupo-campo req" id="gc-nivel">
         <label for="nivel">Nivel Educativo:</label>
-        <select id="nivel" required>
+        <select id="nivel" name="nivel" required>
           <option value="" disabled selected>Seleccione…</option>
         </select>
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
-      <div class="grupo-campo">
+      <div class="grupo-campo req" id="gc-grado">
         <label for="grado">Grado de Interés:</label>
-        <select id="grado" required>
+        <select id="grado" name="grado" required>
           <option value="" disabled selected>Seleccione…</option>
         </select>
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
       <!-- Solo para Diversificado (según carrera) -->
-      <div class="grupo-campo" id="grupo-ciclo" style="display:none;">
+      <div class="grupo-campo req" id="grupo-ciclo" style="display:none;">
         <label for="ciclo">Ciclo:</label>
-        <select id="ciclo">
+        <select id="ciclo" name="ciclo">
           <option value="" disabled selected>Seleccione…</option>
         </select>
+        <div class="tooltip-error" role="alert"><span class="ico">!</span> Completa este campo</div>
       </div>
 
+      <!-- Botonera -->
       <div class="botones">
-        <button type="submit" class="boton boton-primario">Guardar</button>
+        <button type="submit" class="boton boton-primario" id="btnGuardar">Guardar</button>
         <a href="index.html" class="boton boton-secundario">Volver</a>
       </div>
     </form>
+  </div>
+
+  <!-- MsgBox Modal -->
+  <div id="mbox" class="mbox-backdrop" role="dialog" aria-modal="true" aria-labelledby="mbox-title">
+    <div class="mbox">
+      <div class="mbox-head">
+        <span class="mbox-icon">✓</span>
+        <div id="mbox-title">Acción completada</div>
+      </div>
+      <div class="mbox-body" id="mbox-text">Datos guardados con éxito.</div>
+      <div class="mbox-actions">
+        <button type="button" class="mbox-btn" id="mbox-aceptar">Aceptar</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -96,14 +149,16 @@
     const gradoSelect   = document.getElementById('grado');
     const cicloGroup    = document.getElementById('grupo-ciclo');
     const cicloSelect   = document.getElementById('ciclo');
+    const btnGuardar    = document.getElementById('btnGuardar');
 
-    // Niveles por Jornada
+    const mboxBackdrop  = document.getElementById('mbox');
+    const mboxBtnOk     = document.getElementById('mbox-aceptar');
+
     const nivelesPorJornada = {
       "Matutina": ["Preprimaria", "Primaria", "Básicos", "Diversificado"],
       "Fin de Semana": ["Básicos", "Básicos por Madurez", "Diversificado"]
     };
 
-    // Carreras por Jornada (cuando Nivel = Diversificado)
     const carrerasDiversificado = {
       "Matutina": [
         "Bachillerato en Computación",
@@ -121,14 +176,13 @@
       ]
     };
 
-    // Ciclos por carrera
     const ciclosPorCarrera = {
       "Bachillerato en Computación": ["4to.", "5to."],
       "Bachillerato en Dibujo Técnico": ["4to.", "5to."],
       "Bachillerato en Ciencias y Letras": ["4to.", "5to."],
       "Perito Contador": ["4to.", "5to.", "6to."],
       "Perito en Administración de Empresas": ["4to.", "5to.", "6to."],
-      "Bachillerato por Madurez": ["5to."]   // solo 5to.
+      "Bachillerato por Madurez": ["5to."]
     };
 
     function obtenerGrados(jornada, nivel) {
@@ -166,6 +220,7 @@
       cicloGroup.style.display = "none";
       cicloSelect.removeAttribute("required");
       llenarSelect(cicloSelect, []);
+      cicloGroup.classList.remove('show-error');
     }
 
     jornadaSelect.addEventListener('change', () => {
@@ -193,63 +248,135 @@
     });
 
     // ============================
-    //  Envío al Apps Script (claves esperadas)
+    //  Validación visual
+    // ============================
+    const idsRequeridos = ["nombrePadre","telefono","nombreAlumno","jornada","nivel","grado"];
+    function clearErrors() {
+      document.querySelectorAll(".grupo-campo").forEach(gc => gc.classList.remove("show-error"));
+      document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
+    }
+    function setError(inputEl) {
+      if (!inputEl) return;
+      const gc = inputEl.closest(".grupo-campo");
+      if (gc) gc.classList.add("show-error");
+      inputEl.classList.add("input-error");
+      inputEl.setAttribute("aria-invalid","true");
+    }
+    function validateRequired() {
+      clearErrors();
+      let ok = true;
+      idsRequeridos.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || !el.value || el.value.trim()==="") { setError(el); ok = false; }
+      });
+      if (nivelSelect.value === "Diversificado") {
+        if (!cicloSelect.value || cicloGroup.style.display === "none") { setError(cicloSelect); ok = false; }
+      }
+      return ok;
+    }
+
+    // UX en vivo
+    document.querySelectorAll('#form-registro input, #form-registro select').forEach(el=>{
+      el.addEventListener('input', ()=>{
+        const gc = el.closest('.grupo-campo');
+        if (el.value && el.value.trim() !== "") {
+          el.classList.remove('input-error');
+          if (gc) gc.classList.remove('show-error');
+        }
+      });
+      el.addEventListener('blur', ()=>{
+        if (!el.value || el.value.trim()==="") setError(el);
+      });
+    });
+
+    // ============================
+    //  Inactividad 120s → index.html
+    // ============================
+    let __idleTimer;
+    function resetIdle(){
+      clearTimeout(__idleTimer);
+      __idleTimer = setTimeout(() => (window.location.href = "index.html"), 120000);
+    }
+    ["mousemove","keypress","click","touchstart","scroll"].forEach(ev =>
+      document.addEventListener(ev, resetIdle, { passive: true })
+    );
+    resetIdle();
+
+    // ============================
+    //  MsgBox helpers
+    // ============================
+    function abrirMsgBox(texto="Datos guardados con éxito."){
+      document.getElementById('mbox-text').textContent = texto;
+      mboxBackdrop.classList.add('mostrar');
+      mboxBtnOk.focus();
+    }
+    function cerrarMsgBox(){
+      mboxBackdrop.classList.remove('mostrar');
+      window.location.href = "index.html";
+    }
+    mboxBtnOk.addEventListener('click', cerrarMsgBox);
+    mboxBackdrop.addEventListener('click', (e)=>{
+      if (e.target === mboxBackdrop) cerrarMsgBox();
+    });
+    document.addEventListener('keydown', (e)=>{
+      if (!mboxBackdrop.classList.contains('mostrar')) return;
+      if (e.key === "Escape" || e.key === "Enter" || e.key === " ") cerrarMsgBox();
+    });
+
+    // ============================
+    //  Envío al Apps Script + manejo de respuesta
     // ============================
     document.getElementById('form-registro').addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!validateRequired()) return;
 
       // Normalizar correo a minúsculas
       const correo = document.getElementById('correo');
       if (correo && correo.value) correo.value = correo.value.trim().toLowerCase();
 
-      // Enviar con las claves que espera tu Apps Script
+      // Ciclo = "N/A" si no aplica
+      const cicloValor = (nivelSelect.value === "Diversificado" && cicloSelect.value) ? cicloSelect.value : "N/A";
+
       const params = new URLSearchParams();
-      params.append("nombrePadre",  document.getElementById('nombreEncargado').value.trim());
-      params.append("telefono",     document.getElementById('telefono1').value.trim());
+      params.append("nombrePadre",  document.getElementById('nombrePadre').value.trim());
+      params.append("telefono",     document.getElementById('telefono').value.trim());
       params.append("telefono2",    document.getElementById('telefono2').value.trim());
       params.append("correo",       document.getElementById('correo').value.trim());
       params.append("nombreAlumno", document.getElementById('nombreAlumno').value.trim());
       params.append("edad",         document.getElementById('edad').value.trim());
-      params.append("jornada",      document.getElementById('jornada').value);
-      params.append("nivel",        document.getElementById('nivel').value);
-      params.append("grado",        document.getElementById('grado').value);
-      if (cicloGroup.style.display === "block" && cicloSelect.value) {
-        params.append("ciclo", cicloSelect.value);
-      }
+      params.append("jornada",      jornadaSelect.value);
+      params.append("nivel",        nivelSelect.value);
+      params.append("grado",        gradoSelect.value);
+      params.append("ciclo",        cicloValor);
 
-      const url = "https://script.google.com/macros/s/AKfycbyXQO0uwa3cXQH_QXGLuVwFfubObjmIO6tybUx_4Iu6WRFbKQX8SAd3GT-IEGZWza3Tdg/exec";
+      const url = "https://script.google.com/macros/s/AKfycbwCbZreNjFvidJ46ZEKcWc53Um1N2WA0t4RCgTu8K3HWSB1H2K0DkJjpBN1mTS7lwBo_g/exec";
 
       try {
+        btnGuardar.disabled = true;
         const resp = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params.toString()
         });
-        const texto = await resp.text();
-        if (texto.trim() === "OK") {
-          alert("Registro guardado correctamente");
+        const texto = (await resp.text()).trim();
+
+        if (texto === "OK") {
+          // Limpiar formulario y dependencias
           e.target.reset();
-          window.location.href = "index.html";
+          resetCiclo();
+          // Mostrar MsgBox modal
+          abrirMsgBox("Datos guardados con éxito.");
+        } else if (texto.startsWith("ERROR_COPY")) {
+          alert("Se guardó en DATOS pero no en COPIA DATOS.\nDetalle: " + texto);
         } else {
           alert("Ocurrió un problema al guardar. Inténtelo de nuevo.");
         }
       } catch (err) {
         alert("Error al conectar con el servidor.");
+      } finally {
+        btnGuardar.disabled = false;
       }
     });
   </script>
-  <script>
-  // Inactividad: 120 s → index
-  let __idleTimer;
-  function resetIdle(){
-    clearTimeout(__idleTimer);
-    __idleTimer = setTimeout(() => (window.location.href = "index.html"), 120000);
-  }
-  ["mousemove","keypress","click","touchstart","scroll"].forEach(ev =>
-    document.addEventListener(ev, resetIdle, { passive: true })
-  );
-  resetIdle(); // inicia el conteo al cargar
-</script>
-
 </body>
 </html>

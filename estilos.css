@@ -919,6 +919,89 @@ button.boton:hover {
 }
 
 
+/*----------------------------------------------------------*/
+/*----------------------------------------------------------*/
+/*----------------------------------------------------------*/
+/*----------------------------------------------------------*/
+/*----------------------------------------------------------*/
+
+/* ===== Título y subtítulo ===== */
+.titulo-nueva{
+  font-size:32px;font-weight:800;letter-spacing:.4px;color:#2e4050;
+  text-align:center;margin:0 0 8px 0
+}
+.descripcion-form{
+  text-align:center;font-weight:700;color:#2e4050;margin:0 0 18px 0;font-size:16px
+}
+
+/* ===== Labels con franja y asterisco rojo SOLO si es requerido ===== */
+.formulario label{
+  display:block;text-transform:uppercase;font-weight:700;letter-spacing:.3px;
+  color:#2c3e50;margin-bottom:6px;position:relative;padding-left:14px;line-height:1.2
+}
+.formulario .grupo-campo.req label::after{
+  content:" *"; color:#e53935; font-weight:800;
+}
+.formulario label::before{
+  content:"";position:absolute;left:0;top:2px;width:4px;height:18px;
+  background:#178a96;border-radius:2px
+}
+
+/* Campos y separación */
+.formulario .grupo-campo{margin-bottom:14px;position:relative}
+.formulario select,
+.formulario input[type="text"],
+.formulario input[type="tel"],
+.formulario input[type="email"],
+.formulario input[type="number"]{
+  width:100%;box-sizing:border-box
+}
+
+/* ===== Estado de error ===== */
+.input-error{
+  border:2px solid #e53935 !important; outline:none;
+  box-shadow:0 0 0 2px rgba(229,57,53,.08)
+}
+.grupo-campo.show-error .tooltip-error{
+  display:block;
+}
+
+/* Tooltip estilo “Completa este campo” */
+.tooltip-error{
+  display:none; position:absolute; right:8px; top:100%;
+  margin-top:6px; background:#fff; border:1px solid #e0e0e0;
+  border-radius:8px; padding:8px 10px; font-size:13px; color:#2c3e50;
+  box-shadow:0 6px 16px rgba(0,0,0,.08)
+}
+.tooltip-error::before{
+  content:""; position:absolute; top:-8px; right:22px; width:0; height:0;
+  border-left:8px solid transparent; border-right:8px solid transparent;
+  border-bottom:8px solid #e0e0e0;
+}
+.tooltip-error::after{
+  content:""; position:absolute; top:-7px; right:22px; width:0; height:0;
+  border-left:7px solid transparent; border-right:7px solid transparent;
+  border-bottom:7px solid #fff;
+}
+.tooltip-error .ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;margin-right:6px;border-radius:4px;
+  background:#ffb300;color:#fff;font-weight:800;font-size:12px
+}
+
+/* ===== Botones (misma letra en ambos) ===== */
+.botones{display:flex;gap:16px;margin-top:18px}
+.boton{
+  border:none;padding:16px 20px;border-radius:10px;font-weight:800;
+  text-transform:uppercase;cursor:pointer;line-height:1;font-size:14px
+}
+.boton-primario{background:#2e4050;color:#fff;flex:1}
+.boton-secundario{background:#2e4050;color:#fff;white-space:nowrap}
+.boton-primario:hover,.boton-secundario:hover{filter:brightness(1.05)}
+
+
+
+
 
 
 
