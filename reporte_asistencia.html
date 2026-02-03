@@ -175,7 +175,7 @@
         return;
       }
       const fecha = new Date(fechaInput).toISOString().split("T")[0];
-      window.open(`reporte_ausentes_pdf.html?fecha=${fecha}`, "_self");
+      window.open(`reporte_ausentes_pdf.html?fecha=${fecha}`, "_blank");
     }
 
     function mostrarDatosFiltrados(datos) {
@@ -229,4 +229,5 @@
 
 </body>
 </html>
+
 
