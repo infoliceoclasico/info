@@ -2,218 +2,113 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exportar Ausentes a Excel</title>
+  <link rel="stylesheet" href="estilos.css" />
 
-  <title>Exportar Ausentes</title>
-
-  <!-- NO CACHE -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <!-- Evitar caché del navegador -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
-  <!-- TU CSS -->
-  <link rel="stylesheet" href="estilos.css" />
 </head>
 <body>
 
-  <div class="contenedor-reporte">
-    <div class="tarjeta-reporte">
+  <!-- LOGO (misma referencia que tus otras páginas) -->
+  <img src="imagenes/logo1.png" alt="Logo" class="logo" />
 
-      <div class="encabezado-reporte">
-        <h1>EXPORTAR AUSENTES A EXCEL</h1>
-        <p>Seleccione una fecha y el nivel para descargar el listado de ausentes.</p>
-      </div>
+  <div class="contenedor" id="contenido">
+    <h2 class="titulo-modulo">Exportar Ausentes a Excel</h2>
+    <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
+
+    <div class="tarjeta-reporte">
+      <p class="instrucciones-form">
+        Seleccione una fecha y el nivel para descargar el listado de ausentes.
+      </p>
 
       <div class="filtros-reporte">
-        <div class="grupo-filtro">
-          <label for="fecha">FECHA</label>
-          <input type="date" id="fecha" />
-        </div>
+        <label for="fechaAusentesExcel">Fecha:</label>
+        <input type="date" id="fechaAusentesExcel" autocomplete="off" />
 
-        <div class="grupo-filtro" style="align-self: end;">
-          <button class="btn-accion" id="btnLimpiar" type="button">LIMPIAR</button>
-        </div>
+        <button class="boton" type="button" onclick="limpiarFormulario()">Limpiar</button>
       </div>
 
-      <div class="acciones-reporte" style="display:grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 12px;">
-        <button class="btn-accion" type="button" data-nivel="primaria_inicial">PRIMARIA INICIAL</button>
-        <button class="btn-accion" type="button" data-nivel="primaria_alta">PRIMARIA ALTA</button>
-        <button class="btn-accion" type="button" data-nivel="basicos">BÁSICOS</button>
-        <button class="btn-accion" type="button" data-nivel="bachilleratos">BACHILLERATOS</button>
-        <button class="btn-accion" type="button" data-nivel="peritos">PERITOS</button>
-        <button class="btn-accion" type="button" data-nivel="general">GENERAL</button>
-      </div>
+      <!-- Botonera en 2 columnas con estilo del sistema -->
+      <div class="grid-2columnas" style="padding: 10px 0 0 0;">
+        <button class="boton-menu" type="button" onclick="exportarExcel('primaria_inicial')">
+          Primaria Inicial
+        </button>
 
-      <div class="seccion-resultado" style="margin-top: 16px;">
-        <div id="estado" class="mensaje-reporte" style="display:none;"></div>
-      </div>
+        <button class="boton-menu" type="button" onclick="exportarExcel('primaria_alta')">
+          Primaria Alta
+        </button>
 
-      <div style="margin-top: 20px; display:flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-        <button class="btn-secundario" type="button" id="btnRegresar">REGRESAR</button>
-      </div>
+        <button class="boton-menu" type="button" onclick="exportarExcel('basicos')">
+          Básicos
+        </button>
 
+        <button class="boton-menu" type="button" onclick="exportarExcel('bachilleratos')">
+          Bachilleratos
+        </button>
+
+        <button class="boton-menu" type="button" onclick="exportarExcel('peritos')">
+          Peritos
+        </button>
+
+        <button class="boton-menu" type="button" onclick="exportarExcel('general')">
+          General
+        </button>
+      </div>
+    </div>
+
+    <div class="botones" style="margin-top: 30px;">
+      <a href="index.html" class="boton-volver">Volver al Menú</a>
     </div>
   </div>
 
-<script>
-  // ============================
-  // SEGURIDAD / SESIÓN
-  // ============================
-  const usuario = sessionStorage.getItem("usuario");
-  if (!usuario) {
-    window.location.href = "login.html";
-  }
+  <script>
+    // ✅ Pega aquí la URL de tu Apps Script (doGet)
+    // Debe responder descargando Excel y guardándolo en Drive
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTPKN9lHWCXaFFzdbv2EQ7U275C8aWypmkvyQ-0G16Wb8T5gFoCvAdhSHtYWCH18zw/exec";
 
-  // ============================
-  // CONFIG: pega tu URL de Apps Script aquí
-  // ============================
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTPKN9lHWCXaFFzdbv2EQ7U275C8aWypmkvyQ-0G16Wb8T5gFoCvAdhSHtYWCH18zw/exec";
-
-  // ============================
-  // UI HELPERS
-  // ============================
-  const estadoEl = document.getElementById("estado");
-  const fechaEl = document.getElementById("fecha");
-
-  function mostrarEstado(mensaje, tipo = "info") {
-    estadoEl.style.display = "block";
-    estadoEl.textContent = mensaje;
-
-    // Opcional: si tu CSS tiene clases, puedes adaptarlo.
-    // Aquí dejamos un estilo mínimo.
-    estadoEl.style.padding = "10px";
-    estadoEl.style.borderRadius = "8px";
-    estadoEl.style.marginTop = "8px";
-
-    if (tipo === "ok") {
-      estadoEl.style.background = "#e7f7ee";
-      estadoEl.style.color = "#0f5132";
-      estadoEl.style.border = "1px solid #b7ebc6";
-    } else if (tipo === "error") {
-      estadoEl.style.background = "#fdecea";
-      estadoEl.style.color = "#842029";
-      estadoEl.style.border = "1px solid #f5c2c7";
+    // Seguridad / sesión (igual que el resto del sistema)
+    const usuario = sessionStorage.getItem("usuario");
+    if (!usuario) {
+      window.location.href = "asistencia_login.html";
     } else {
-      estadoEl.style.background = "#eef3ff";
-      estadoEl.style.color = "#1f2a44";
-      estadoEl.style.border = "1px solid #cdd8ff";
-    }
-  }
-
-  function ocultarEstado() {
-    estadoEl.style.display = "none";
-    estadoEl.textContent = "";
-  }
-
-  // ============================
-  // FECHA: usar string directo (evita problemas de zona horaria)
-  // ============================
-  function obtenerFecha() {
-    const f = (fechaEl.value || "").trim();
-    return f; // YYYY-MM-DD
-  }
-
-  // ============================
-  // DESCARGA AUTOMÁTICA
-  // ============================
-  function descargarArchivo(url, nombreSugerido) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-
-    // Algunos navegadores respetan download, otros no si es cross-origin,
-    // pero igual abre el link directo de descarga.
-    if (nombreSugerido) a.download = nombreSugerido;
-
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-
-  // ============================
-  // LLAMADA AL APPS SCRIPT
-  // ============================
-  async function exportarExcel(nivel) {
-    ocultarEstado();
-
-    const fecha = obtenerFecha();
-    if (!fecha) {
-      mostrarEstado("Seleccione una fecha válida.", "error");
-      return;
+      document.getElementById("nombreUsuario").textContent = usuario;
     }
 
-    // UI: bloquear botones mientras genera
-    const botones = document.querySelectorAll('button[data-nivel]');
-    botones.forEach(b => b.disabled = true);
+    // Si viene fecha por parámetro en la URL, la coloca automáticamente
+    const params = new URLSearchParams(window.location.search);
+    const fechaParam = params.get("fecha");
+    if (fechaParam) {
+      document.getElementById("fechaAusentesExcel").value = fechaParam;
+    }
 
-    try {
-      mostrarEstado("Generando archivo Excel, por favor espere...", "info");
+    function limpiarFormulario() {
+      document.getElementById("fechaAusentesExcel").value = "";
+      // Limpia también parámetros en la URL si existen
+      const urlLimpia = window.location.pathname;
+      window.history.replaceState({}, document.title, urlLimpia);
+    }
 
-      const url = `${APPS_SCRIPT_URL}?fecha=${encodeURIComponent(fecha)}&nivel=${encodeURIComponent(nivel)}&formato=excel`;
+    function exportarExcel(nivel) {
+      const fechaInput = document.getElementById("fechaAusentesExcel").value;
 
-      const res = await fetch(url, { cache: "no-store" });
-      const data = await res.json();
-
-      if (data.status !== "ok") {
-        const msg = data.mensaje || data.error || "No se pudo generar el reporte.";
-        mostrarEstado(msg, "error");
+      if (!fechaInput) {
+        alert("Por favor seleccione una fecha.");
         return;
       }
 
-      mostrarEstado(`Reporte generado. Ausentes: ${data.cantidad}. Iniciando descarga...`, "ok");
+      // Formato YYYY-MM-DD (Apps Script suele trabajar mejor así)
+      const fecha = new Date(fechaInput).toISOString().split("T")[0];
 
-      if (data.downloadUrl) {
-        descargarArchivo(data.downloadUrl, data.fileName || "");
-      } else {
-        // En caso extremo, al menos abrir la carpeta o algo
-        mostrarEstado("Reporte generado, pero no se recibió URL de descarga.", "error");
-      }
+      // Llamada al Apps Script: descarga el Excel
+      // nivel: primaria_inicial | primaria_alta | basicos | bachilleratos | peritos | general
+      const url = `${SCRIPT_URL}?fecha=${encodeURIComponent(fecha)}&nivel=${encodeURIComponent(nivel)}`;
 
-    } catch (err) {
-      mostrarEstado("Error al conectar con el servidor. Verifique la URL del Apps Script y el despliegue.", "error");
-    } finally {
-      botones.forEach(b => b.disabled = false);
+      // Dispara descarga (misma pestaña)
+      window.location.href = url;
     }
-  }
-
-  // ============================
-  // EVENTOS DE BOTONES
-  // ============================
-  document.querySelectorAll('button[data-nivel]').forEach(btn => {
-    btn.addEventListener("click", () => exportarExcel(btn.dataset.nivel));
-  });
-
-  document.getElementById("btnLimpiar").addEventListener("click", () => {
-    fechaEl.value = "";
-    ocultarEstado();
-  });
-
-  document.getElementById("btnRegresar").addEventListener("click", () => {
-    window.location.href = "reporte_asistencia.html";
-  });
-
-  // ============================
-  // INACTIVIDAD (10 MIN)
-  // ============================
-  let inactivityTimer;
-  function resetInactivity() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-      sessionStorage.clear();
-      window.location.href = "login.html";
-    }, 10 * 60 * 1000);
-  }
-  ["mousemove","keydown","click","scroll","touchstart"].forEach(evt => {
-    window.addEventListener(evt, resetInactivity, { passive: true });
-  });
-  resetInactivity();
-
-  // Si viene fecha por query (?fecha=YYYY-MM-DD), la coloca
-  const params = new URLSearchParams(window.location.search);
-  const f = params.get("fecha");
-  if (f) fechaEl.value = f;
-
-</script>
+  </script>
 </body>
 </html>
