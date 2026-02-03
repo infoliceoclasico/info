@@ -1,113 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Exportar Ausentes a Excel</title>
-  <link rel="stylesheet" href="estilos.css" />
+  <link rel="stylesheet" href="estilos.css">
 
   <!-- Evitar caché del navegador -->
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 </head>
 <body>
 
-  <!-- LOGO (misma referencia que tus otras páginas) -->
-  <img src="imagenes/logo1.png" alt="Logo" class="logo" />
+  <img src="imagenes/logo1.png" alt="Logo" class="logo">
 
-  <div class="contenedor" id="contenido">
+  <div class="contenedor" id="contenido" style="display:none;">
     <h2 class="titulo-modulo">Exportar Ausentes a Excel</h2>
     <p class="bienvenida-usuario">Bienvenido, <span id="nombreUsuario"></span></p>
 
     <div class="tarjeta-reporte">
-      <p class="instrucciones-form">
-        Seleccione una fecha y el nivel para descargar el listado de ausentes.
-      </p>
-
       <div class="filtros-reporte">
-        <label for="fechaAusentesExcel">Fecha:</label>
-        <input type="date" id="fechaAusentesExcel" autocomplete="off" />
+        <label for="fechaExcel">Fecha:</label>
+        <input type="date" id="fechaExcel" autocomplete="off">
 
-        <button class="boton" type="button" onclick="limpiarFormulario()">Limpiar</button>
+        <button class="boton" onclick="limpiar()">Limpiar</button>
       </div>
 
-      <!-- Botonera en 2 columnas con estilo del sistema -->
-      <div class="grid-2columnas" style="padding: 10px 0 0 0;">
-        <button class="boton-menu" type="button" onclick="exportarExcel('primaria_inicial')">
-          Primaria Inicial
-        </button>
+      <!-- Misma idea visual del sistema: botones grandes -->
+      <div class="grid-2columnas" style="padding: 20px 20px 10px;">
+        <button class="boton-menu" onclick="exportar('primaria_inicial')">Primaria Inicial</button>
+        <button class="boton-menu" onclick="exportar('primaria_alta')">Primaria Alta</button>
 
-        <button class="boton-menu" type="button" onclick="exportarExcel('primaria_alta')">
-          Primaria Alta
-        </button>
+        <button class="boton-menu" onclick="exportar('basicos')">Básicos</button>
+        <button class="boton-menu" onclick="exportar('bachilleratos')">Bachilleratos</button>
 
-        <button class="boton-menu" type="button" onclick="exportarExcel('basicos')">
-          Básicos
-        </button>
-
-        <button class="boton-menu" type="button" onclick="exportarExcel('bachilleratos')">
-          Bachilleratos
-        </button>
-
-        <button class="boton-menu" type="button" onclick="exportarExcel('peritos')">
-          Peritos
-        </button>
-
-        <button class="boton-menu" type="button" onclick="exportarExcel('general')">
-          General
-        </button>
+        <button class="boton-menu" onclick="exportar('peritos')">Peritos</button>
+        <button class="boton-menu" onclick="exportar('general')">General</button>
       </div>
     </div>
 
+    <!-- Barra inferior igual a reporte_asistencia -->
     <div class="botones" style="margin-top: 30px;">
-      <a href="index.html" class="boton-volver">Volver al Menú</a>
+      <a href="index.html" class="boton">Volver al Menú</a>
+      <a href="asistencia_login.html" onclick="cerrarSesion()" class="boton">Cerrar Sesión</a>
     </div>
   </div>
 
   <script>
-    // ✅ Pega aquí la URL de tu Apps Script (doGet)
-    // Debe responder descargando Excel y guardándolo en Drive
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTPKN9lHWCXaFFzdbv2EQ7U275C8aWypmkvyQ-0G16Wb8T5gFoCvAdhSHtYWCH18zw/exec";
+    // ===========================
+    // CONFIG: pega aquí tu Web App URL (nuevo Apps Script de exportación)
+    // ===========================
+    const SCRIPT_EXPORT_URL = "PEGAR_AQUI_TU_URL_DEL_APPS_SCRIPT_EXPORT";
 
-    // Seguridad / sesión (igual que el resto del sistema)
     const usuario = sessionStorage.getItem("usuario");
+
     if (!usuario) {
       window.location.href = "asistencia_login.html";
     } else {
       document.getElementById("nombreUsuario").textContent = usuario;
+      document.getElementById("contenido").style.display = "block";
     }
 
-    // Si viene fecha por parámetro en la URL, la coloca automáticamente
+    // Si viene fecha en la URL (?fecha=YYYY-MM-DD) la carga
     const params = new URLSearchParams(window.location.search);
     const fechaParam = params.get("fecha");
     if (fechaParam) {
-      document.getElementById("fechaAusentesExcel").value = fechaParam;
+      document.getElementById("fechaExcel").value = fechaParam;
     }
 
-    function limpiarFormulario() {
-      document.getElementById("fechaAusentesExcel").value = "";
-      // Limpia también parámetros en la URL si existen
+    function cerrarSesion() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    function limpiar() {
+      document.getElementById("fechaExcel").value = "";
       const urlLimpia = window.location.pathname;
       window.history.replaceState({}, document.title, urlLimpia);
     }
 
-    function exportarExcel(nivel) {
-      const fechaInput = document.getElementById("fechaAusentesExcel").value;
+    async function exportar(nivel) {
+      const fechaInput = document.getElementById("fechaExcel").value;
 
       if (!fechaInput) {
         alert("Por favor seleccione una fecha.");
         return;
       }
 
-      // Formato YYYY-MM-DD (Apps Script suele trabajar mejor así)
       const fecha = new Date(fechaInput).toISOString().split("T")[0];
 
-      // Llamada al Apps Script: descarga el Excel
-      // nivel: primaria_inicial | primaria_alta | basicos | bachilleratos | peritos | general
-      const url = `${SCRIPT_URL}?fecha=${encodeURIComponent(fecha)}&nivel=${encodeURIComponent(nivel)}`;
+      // Ahora NO abrimos directo el script (porque te mostrará JSON)
+      // Primero pedimos JSON, luego descargamos el archivo con el link de Drive
+      const url = `${SCRIPT_EXPORT_URL}?fecha=${encodeURIComponent(fecha)}&nivel=${encodeURIComponent(nivel)}`;
 
-      // Dispara descarga (misma pestaña)
-      window.location.href = url;
+      try {
+        const resp = await fetch(url, { cache: "no-store" });
+        const data = await resp.json();
+
+        if (data.status !== "ok") {
+          alert("Error al exportar: " + (data.mensaje || data.error || "Respuesta no válida"));
+          return;
+        }
+
+        // Descarga del archivo XLSX
+        // (este link funciona si el archivo se comparte con link)
+        window.open(data.downloadUrl, "_blank");
+
+      } catch (e) {
+        console.error(e);
+        alert("No se pudo generar el Excel. Verifique su conexión o el Apps Script.");
+      }
     }
   </script>
 </body>
