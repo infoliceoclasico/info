@@ -9,7 +9,65 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+
+  <style>
+    /* Ajustes SOLO para este módulo (sin tocar tu estilos.css) */
+    .grid-2columnas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      width: 100%;
+      padding: 10px 20px 10px;
+      box-sizing: border-box;
+    }
+
+    .grid-2columnas .boton-menu {
+      width: 100%;
+      display: block;
+      padding: 18px 14px;
+      border-radius: 12px;
+    }
+
+    /* Mensajes de estado */
+    .estado-reporte {
+      margin: 10px 20px 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: none;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .estado-cargando {
+      display: block;
+      background: rgba(255, 193, 7, 0.18);
+      border: 1px solid rgba(255, 193, 7, 0.45);
+    }
+    .estado-ok {
+      display: block;
+      background: rgba(40, 167, 69, 0.14);
+      border: 1px solid rgba(40, 167, 69, 0.35);
+    }
+    .estado-error {
+      display: block;
+      background: rgba(220, 53, 69, 0.12);
+      border: 1px solid rgba(220, 53, 69, 0.35);
+    }
+
+    /* Deshabilitar botones mientras genera */
+    .btn-disabled {
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    @media (max-width: 760px) {
+      .grid-2columnas {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
   <img src="imagenes/logo1.png" alt="Logo" class="logo">
@@ -22,24 +80,25 @@
       <div class="filtros-reporte">
         <label for="fechaExcel">Fecha:</label>
         <input type="date" id="fechaExcel" autocomplete="off">
-
-        <button class="boton" onclick="limpiar()">Limpiar</button>
       </div>
 
-      <!-- Misma idea visual del sistema: botones grandes -->
-      <div class="grid-2columnas" style="padding: 20px 20px 10px;">
-        <button class="boton-menu" onclick="exportar('primaria_inicial')">Primaria Inicial</button>
-        <button class="boton-menu" onclick="exportar('primaria_alta')">Primaria Alta</button>
+      <!-- Mensaje de estado -->
+      <div id="estado" class="estado-reporte"></div>
 
-        <button class="boton-menu" onclick="exportar('basicos')">Básicos</button>
-        <button class="boton-menu" onclick="exportar('bachilleratos')">Bachilleratos</button>
+      <!-- Botones grandes (más estirados al ancho de la tarjeta) -->
+      <div class="grid-2columnas">
+        <button class="boton-menu" onclick="exportar('primaria_inicial')" id="btn_pi">Primaria Inicial</button>
+        <button class="boton-menu" onclick="exportar('primaria_alta')" id="btn_pa">Primaria Alta</button>
 
-        <button class="boton-menu" onclick="exportar('peritos')">Peritos</button>
-        <button class="boton-menu" onclick="exportar('general')">General</button>
+        <button class="boton-menu" onclick="exportar('basicos')" id="btn_bas">Básicos</button>
+        <button class="boton-menu" onclick="exportar('bachilleratos')" id="btn_bach">Bachilleratos</button>
+
+        <button class="boton-menu" onclick="exportar('peritos')" id="btn_per">Peritos</button>
+        <button class="boton-menu" onclick="exportar('general')" id="btn_gen">General</button>
       </div>
     </div>
 
-    <!-- Barra inferior igual a reporte_asistencia -->
+    <!-- Barra inferior igual al sistema -->
     <div class="botones" style="margin-top: 30px;">
       <a href="index.html" class="boton">Volver al Menú</a>
       <a href="asistencia_login.html" onclick="cerrarSesion()" class="boton">Cerrar Sesión</a>
@@ -48,7 +107,7 @@
 
   <script>
     // ===========================
-    // CONFIG: pega aquí tu Web App URL (nuevo Apps Script de exportación)
+    // CONFIG: URL de tu Web App de exportación
     // ===========================
     const SCRIPT_EXPORT_URL = "https://script.google.com/macros/s/AKfycbwe2w4NsUVY1NPUJ2MsDTNkhGOdXUT790NmpwRPj9ccwgEm2jFudoB749RamGGRI73L/exec";
 
@@ -72,47 +131,77 @@
       sessionStorage.removeItem("usuario");
     }
 
-    function limpiar() {
-      document.getElementById("fechaExcel").value = "";
-      const urlLimpia = window.location.pathname;
-      window.history.replaceState({}, document.title, urlLimpia);
+    function setEstado(tipo, texto) {
+      const el = document.getElementById("estado");
+      el.className = "estado-reporte"; // reset
+      el.textContent = texto;
+
+      if (tipo === "cargando") el.classList.add("estado-cargando");
+      if (tipo === "ok") el.classList.add("estado-ok");
+      if (tipo === "error") el.classList.add("estado-error");
+
+      el.style.display = "block";
+    }
+
+    function limpiarEstado() {
+      const el = document.getElementById("estado");
+      el.style.display = "none";
+      el.textContent = "";
+      el.className = "estado-reporte";
+    }
+
+    function setBotonesBloqueados(bloquear) {
+      const botones = document.querySelectorAll(".boton-menu");
+      botones.forEach(b => {
+        if (bloquear) b.classList.add("btn-disabled");
+        else b.classList.remove("btn-disabled");
+      });
     }
 
     async function exportar(nivel) {
-      const fechaInput = document.getElementById("fechaExcel").value;
+      limpiarEstado();
 
+      const fechaInput = document.getElementById("fechaExcel").value;
       if (!fechaInput) {
         alert("Por favor seleccione una fecha.");
         return;
       }
 
-      const fecha = new Date(fechaInput).toISOString().split("T")[0];
+      // ✅ NO convertir fecha a ISO (evita desfase por zona horaria)
+      const fecha = fechaInput;
 
-      // Ahora NO abrimos directo el script (porque te mostrará JSON)
-      // Primero pedimos JSON, luego descargamos el archivo con el link de Drive
       const url = `${SCRIPT_EXPORT_URL}?fecha=${encodeURIComponent(fecha)}&nivel=${encodeURIComponent(nivel)}`;
 
       try {
+        setBotonesBloqueados(true);
+        setEstado("cargando", "Generando reporte...");
+
         const resp = await fetch(url, { cache: "no-store" });
         const data = await resp.json();
 
         if (data.status !== "ok") {
-          alert("Error al exportar: " + (data.mensaje || data.error || "Respuesta no válida"));
+          setEstado("error", "Error al exportar: " + (data.mensaje || data.error || "Respuesta no válida"));
+          setBotonesBloqueados(false);
           return;
         }
 
-        // Descarga del archivo XLSX
-        // (este link funciona si el archivo se comparte con link)
-        window.open(data.downloadUrl, "_blank");
+        // ✅ éxito
+        setEstado("ok", "Reporte guardado");
+
+        // Abre el archivo generado (descarga / vista)
+        if (data.downloadUrl) {
+          window.open(data.downloadUrl, "_blank");
+        }
+
+        setBotonesBloqueados(false);
 
       } catch (e) {
         console.error(e);
-        alert("No se pudo generar el Excel. Verifique su conexión o el Apps Script.");
+        setEstado("error", "No se pudo generar el Excel. Verifique su conexión o el Apps Script.");
+        setBotonesBloqueados(false);
       }
     }
   </script>
+
 </body>
 </html>
-
-
-
