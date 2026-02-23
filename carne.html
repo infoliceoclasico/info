@@ -39,7 +39,7 @@
       <!-- Panel Pase Extraordinario -->
       <div id="panelExtra" style="display:none; margin-top:12px; text-align:left;">
         <p class="mensaje-carne" style="margin-bottom:8px;">
-          Este alumno alcanzó el límite (3/3). Con clave de autorización puedes generar un <strong>pase extraordinario</strong>.
+          Este alumno alcanzó el límite (6/6). Con clave de autorización puedes generar un <strong>pase extraordinario</strong>.
         </p>
         <div style="display:flex; gap:8px; align-items:center;">
           <input type="password" id="claveExtra" placeholder="Ingrese Autorización" style="flex:1; padding:10px; border:1px solid #e5e7eb; border-radius:8px;">
@@ -88,12 +88,18 @@
     // ---------- Helper robusto para fetch JSON ----------
     async function fetchJSON(url, payload) {
       const r = await fetch(url, { method: "POST", body: JSON.stringify(payload) });
-      const text = await r.text(); // leemos como texto SIEMPRE
+      const text = await r.text();
       try { return JSON.parse(text); }
       catch (err) {
         console.error("Respuesta no JSON del servidor:", text);
         throw new Error("Respuesta no válida del servidor");
       }
+    }
+
+    // Utilidad: texto del pase normal 1..6
+    function textoPaseNormal(n) {
+      const map = ["PRIMER","SEGUNDO","TERCER","CUARTO","QUINTO","SEXTO"];
+      return map[n - 1] || `PASE ${n}`;
     }
 
     // Búsqueda en vivo (debounce)
@@ -206,15 +212,19 @@
       try {
         const res = await fetchJSON(ENDPOINT, { codigo: __seleccion.codigo });
 
-        if (res.mensaje && res.mensaje.includes("éxito")) {
-          const textoPase = res.pases === 1 ? "PRIMER" : res.pases === 2 ? "SEGUNDO" : "TERCER";
-          const advertencia = res.pases === 3
-            ? "<br><strong style='color: red;'>Este es su último pase permitido. Debe reponer su carné.</strong>"
+        if (res.ok && res.mensaje && res.mensaje.toLowerCase().includes("éxito")) {
+          const textoPase = textoPaseNormal(Number(res.pases || 0));
+          const advertencia = Number(res.pases) === 6
+            ? "<br><strong style='color: red;'>ESTE ES SU ÚLTIMO PASE NORMAL (6/6). SI NECESITA UNO MÁS, USE EL PASE EXTRAORDINARIO CON AUTORIZACIÓN.</strong>"
             : "";
+
           mensaje.className = "mensaje-carne ok";
           mensaje.innerHTML = `✔️ Pase creado con éxito.<br>Este es su <strong>${textoPase}</strong> pase por olvido de carné.${advertencia}<br>Verifique su correo para más información.`;
+
           setTimeout(() => window.location.href = "index.html", 30000);
+
         } else {
+          // Límite alcanzado => muestra panel extraordinario
           if (res.mensaje && res.mensaje.toLowerCase().includes("límite alcanzado")) {
             panelExtra.style.display = "block";
             claveExtra.focus();
@@ -223,6 +233,7 @@
           mensaje.textContent = res.mensaje || "No fue posible registrar el pase.";
           btnSolicitar.disabled = false;
         }
+
       } catch (err) {
         mensaje.className = "mensaje-carne error";
         mensaje.textContent = "Error al conectar con el servidor.";
@@ -233,12 +244,14 @@
     // Pase Extraordinario
     btnExtra.addEventListener("click", async () => {
       if (!__seleccion || !__seleccion.codigo) return;
+
       msgExtra.className = "mensaje-carne";
       msgExtra.textContent = "Validando clave...";
       btnExtra.disabled = true;
 
       try {
         const res = await fetchJSON(ENDPOINT, { modo: "paseExtra", codigo: __seleccion.codigo, clave: claveExtra.value.trim() });
+
         if (res.ok) {
           mensaje.className = "mensaje-carne ok";
           mensaje.innerHTML = `✔️ Pase <strong>EXTRAORDINARIO ${res.extra}</strong> generado con éxito.<br>Verifique su correo para más información.`;
@@ -248,6 +261,7 @@
           msgExtra.className = "mensaje-carne error";
           msgExtra.textContent = res.mensaje || "No fue posible generar el pase extraordinario.";
         }
+
       } catch (err) {
         msgExtra.className = "mensaje-carne error";
         msgExtra.textContent = "Error al conectar con el servidor.";
