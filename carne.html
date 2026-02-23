@@ -55,7 +55,7 @@
   </div>
 
   <script>
-    const ENDPOINT = "https://script.google.com/macros/s/AKfycbzJ5VKbBcD4qFx_f8d6-UTUgJk0vdHrzJ6x7RfxIUpLFpmoKtrxfm0rDjRA2BTJVRdAAw/exec";
+    const ENDPOINT = "PEGAR_AQUI_TU_URL_DEL_WEBAPP_/exec";
 
     const inputCorreo    = document.getElementById("correoAlumno");
     const nombrePrev     = document.getElementById("nombrePreview");
@@ -96,7 +96,6 @@
       }
     }
 
-    // Utilidad: texto del pase normal 1..6
     function textoPaseNormal(n) {
       const map = ["PRIMER","SEGUNDO","TERCER","CUARTO","QUINTO","SEXTO"];
       return map[n - 1] || `PASE ${n}`;
@@ -222,9 +221,7 @@
           mensaje.innerHTML = `✔️ Pase creado con éxito.<br>Este es su <strong>${textoPase}</strong> pase por olvido de carné.${advertencia}<br>Verifique su correo para más información.`;
 
           setTimeout(() => window.location.href = "index.html", 30000);
-
         } else {
-          // Límite alcanzado => muestra panel extraordinario
           if (res.mensaje && res.mensaje.toLowerCase().includes("límite alcanzado")) {
             panelExtra.style.display = "block";
             claveExtra.focus();
@@ -273,6 +270,3 @@
 
 </body>
 </html>
-
-
-
