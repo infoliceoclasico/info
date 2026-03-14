@@ -5,13 +5,11 @@
   <title>Exportar Ausentes a Excel</title>
   <link rel="stylesheet" href="estilos.css">
 
-  <!-- Evitar caché del navegador -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
   <style>
-    /* Ajustes SOLO para este módulo (sin tocar tu estilos.css) */
     .grid-2columnas {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -28,7 +26,17 @@
       border-radius: 12px;
     }
 
-    /* Mensajes de estado */
+    .boton-sabado {
+      grid-column: 1 / span 2;
+      background: #6f42c1;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .boton-sabado:hover {
+      background: #5b34a6;
+    }
+
     .estado-reporte {
       margin: 10px 20px 0;
       padding: 12px 14px;
@@ -38,23 +46,25 @@
       box-sizing: border-box;
       text-align: center;
     }
+
     .estado-cargando {
       display: block;
       background: rgba(255, 193, 7, 0.18);
       border: 1px solid rgba(255, 193, 7, 0.45);
     }
+
     .estado-ok {
       display: block;
       background: rgba(40, 167, 69, 0.14);
       border: 1px solid rgba(40, 167, 69, 0.35);
     }
+
     .estado-error {
       display: block;
       background: rgba(220, 53, 69, 0.12);
       border: 1px solid rgba(220, 53, 69, 0.35);
     }
 
-    /* Deshabilitar botones mientras genera */
     .btn-disabled {
       opacity: 0.65;
       pointer-events: none;
@@ -63,6 +73,10 @@
     @media (max-width: 760px) {
       .grid-2columnas {
         grid-template-columns: 1fr;
+      }
+
+      .boton-sabado {
+        grid-column: auto;
       }
     }
   </style>
@@ -82,10 +96,8 @@
         <input type="date" id="fechaExcel" autocomplete="off">
       </div>
 
-      <!-- Mensaje de estado -->
       <div id="estado" class="estado-reporte"></div>
 
-      <!-- Botones grandes (más estirados al ancho de la tarjeta) -->
       <div class="grid-2columnas">
         <button class="boton-menu" onclick="exportar('primaria_inicial')" id="btn_pi">Primaria Inicial</button>
         <button class="boton-menu" onclick="exportar('primaria_alta')" id="btn_pa">Primaria Alta</button>
@@ -95,10 +107,13 @@
 
         <button class="boton-menu" onclick="exportar('peritos')" id="btn_per">Peritos</button>
         <button class="boton-menu" onclick="exportar('general')" id="btn_gen">General</button>
+
+        <button class="boton-menu boton-sabado" onclick="exportar('sabado')" id="btn_sab">
+          Jornada Sábado
+        </button>
       </div>
     </div>
 
-    <!-- Barra inferior igual al sistema -->
     <div class="botones" style="margin-top: 30px;">
       <a href="index.html" class="boton">Volver al Menú</a>
       <a href="asistencia_login.html" onclick="cerrarSesion()" class="boton">Cerrar Sesión</a>
@@ -106,10 +121,7 @@
   </div>
 
   <script>
-    // ===========================
-    // CONFIG: URL de tu Web App de exportación
-    // ===========================
-    const SCRIPT_EXPORT_URL = "https://script.google.com/macros/s/AKfycbz0R3_gfrkWQvo4W4sOt-4L9AV6cSTgVLvYW5iQ05jWPx-96AGYquWcd0sS7IJCNaE/exec";
+    const SCRIPT_EXPORT_URL = "https://script.google.com/macros/s/AKfycbxWs95LLCpUXnJaovEhRSj7gstP4lnFUqR4xcPzyc8UZMvj7tqMIKfGPstm9Hpx10i0/exec";
 
     const usuario = sessionStorage.getItem("usuario");
 
@@ -120,7 +132,6 @@
       document.getElementById("contenido").style.display = "block";
     }
 
-    // Si viene fecha en la URL (?fecha=YYYY-MM-DD) la carga
     const params = new URLSearchParams(window.location.search);
     const fechaParam = params.get("fecha");
     if (fechaParam) {
@@ -133,7 +144,7 @@
 
     function setEstado(tipo, texto) {
       const el = document.getElementById("estado");
-      el.className = "estado-reporte"; // reset
+      el.className = "estado-reporte";
       el.textContent = texto;
 
       if (tipo === "cargando") el.classList.add("estado-cargando");
@@ -167,9 +178,7 @@
         return;
       }
 
-      // ✅ NO convertir fecha a ISO (evita desfase por zona horaria)
       const fecha = fechaInput;
-
       const url = `${SCRIPT_EXPORT_URL}?fecha=${encodeURIComponent(fecha)}&nivel=${encodeURIComponent(nivel)}`;
 
       try {
@@ -185,10 +194,8 @@
           return;
         }
 
-        // ✅ éxito
         setEstado("ok", "Reporte guardado");
 
-        // Abre el archivo generado (descarga / vista)
         if (data.downloadUrl) {
           window.open(data.downloadUrl, "_blank");
         }
@@ -205,6 +212,3 @@
 
 </body>
 </html>
-
-
-
