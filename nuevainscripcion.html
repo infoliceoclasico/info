@@ -153,33 +153,43 @@
       const params = new URLSearchParams(new FormData(form));
       setBtnStateSaving(true);
 
-    fetch("https://script.google.com/macros/s/AKfycbyA75Sqr0S8rXlItSAWoNAtxu_mDme07Kp2CmjJM6cZkSQBfuULMJXz_mWhK5hBXFmx/exec?mod=datos_insert_window", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-  },
-  body: params.toString()
-})
+      fetch("https://script.google.com/macros/s/AKfycbyA75Sqr0S8rXlItSAWoNAtxu_mDme07Kp2CmjJM6cZkSQBfuULMJXz_mWhK5hBXFmx/exec?mod=datos_insert_window", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: params.toString()
+      })
       .then(r => r.text())
       .then(txt => {
-  const t = txt.trim();
-  let out = {};
+        const t = txt.trim();
+        let out = {};
 
-  try {
-    out = JSON.parse(t);
-  } catch (_) {
-    const m = t.match(/OK\s*fila\s*(\d+)/i);
-    if (m) out = { ok: true, row: m[1] };
-  }
+        try {
+          out = JSON.parse(t);
+        } catch (_) {
+          const m = t.match(/OK\s*fila\s*(\d+)/i);
+          if (m) out = { ok: true, row: m[1] };
+        }
 
-  if (out.ok) {
-    alert("DATOS INGRESADOS CORRECTAMENTE - FILA " + (out.row || "desconocida"));
-    form.reset();
-    window.location.href = "inscripciones.html";
-  } else {
-    alert("Error al guardar: " + t);
-  }
-})
+        if (out.ok) {
+          alert("DATOS INGRESADOS CORRECTAMENTE - FILA " + (out.row || "desconocida"));
+          form.reset();
+
+          const hoy = new Date();
+          const yyyy = hoy.getFullYear();
+          const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+          const dd = String(hoy.getDate()).padStart(2, "0");
+          const fechaISO = `${yyyy}-${mm}-${dd}`;
+          const fr = document.getElementById("fechaRegistro");
+          if (fr) fr.value = fechaISO;
+
+          window.location.href = "inscripciones.html";
+        } else {
+          alert("Error al guardar: " + t);
+        }
+      })
+      .catch(err => alert("Error de conexión: " + err))
+      .finally(() => setBtnStateSaving(false));
+    }
 
     // -------------------------------
     //  Inicialización
@@ -211,6 +221,18 @@
         const el = document.getElementById(id);
         if (el) el.addEventListener("input", () => validarTelefono(el));
       });
+
+      const nacEnc = document.getElementById("nacimientoEncargado");
+      if (nacEnc) {
+        nacEnc.addEventListener("change", () => calcularEdad(nacEnc, "edadEncargado"));
+        nacEnc.addEventListener("input", () => calcularEdad(nacEnc, "edadEncargado"));
+      }
+
+      const nacAlu = document.getElementById("nacimientoAlumno");
+      if (nacAlu) {
+        nacAlu.addEventListener("change", () => calcularEdad(nacAlu, "edadAlumno"));
+        nacAlu.addEventListener("input", () => calcularEdad(nacAlu, "edadAlumno"));
+      }
     });
 
     ["mousemove","keypress","click","touchstart"].forEach(evt =>
