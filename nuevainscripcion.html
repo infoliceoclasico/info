@@ -86,7 +86,7 @@
 
     function actualizarGrados() {
       const jornada = document.getElementById("jornada").value;
-      const grado = document.getElementById("grado2026");
+      const grado = document.getElementById("grado2027");
       grado.innerHTML = "<option value=''>Seleccione...</option>";
       const lista = OPCIONES_GRADO[jornada] || [];
       lista.forEach(g => {
@@ -153,7 +153,7 @@
       const params = new URLSearchParams(new FormData(form));
       setBtnStateSaving(true);
 
-      fetch("https://script.google.com/macros/s/AKfycbzVOA-DKy--XCmtAEbgK8BZEmTJtYfRZ4T0rzxj0zTo8Shivw93WGeMfCqY7IQZT1Q/exec", {
+      fetch("https://script.google.com/macros/s/AKfycby6x8QFoBVJOVuO_sEl8M50WvpGxPLfc5DdqRrSUxK68W3GEU_4m5zsx0wpmk6UEVtd/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
         body: params.toString()
@@ -371,8 +371,8 @@
           </select>
         </div>
         <div>
-          <label for="grado2026">GRADO A CURSAR EN 2026<span class="req">*</span>:</label>
-          <select id="grado2026" name="grado2026" required>
+          <label for="grado2027">GRADO A CURSAR EN 2027<span class="req">*</span>:</label>
+          <select id="grado2027" name="grado2027" required>
             <option value="">Seleccione una jornada primero...</option>
           </select>
         </div>
