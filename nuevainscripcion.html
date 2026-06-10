@@ -162,20 +162,24 @@
 })
       .then(r => r.text())
       .then(txt => {
-        const t = txt.trim();
-        if (t.startsWith("OK")) {
-          const m = t.match(/fila\s+(\d+)/i);
-          const fila = m ? m[1] : "desconocida";
-          alert("DATOS INGRESADOS CORRECTAMENTE - FILA " + fila);
-          form.reset();
-          window.location.href = "inscripciones.html";
-        } else {
-          alert("Error al guardar: " + t);
-        }
-      })
-      .catch(err => alert("Error de conexión: " + err))
-      .finally(() => setBtnStateSaving(false));
-    }
+  const t = txt.trim();
+  let out = {};
+
+  try {
+    out = JSON.parse(t);
+  } catch (_) {
+    const m = t.match(/OK\s*fila\s*(\d+)/i);
+    if (m) out = { ok: true, row: m[1] };
+  }
+
+  if (out.ok) {
+    alert("DATOS INGRESADOS CORRECTAMENTE - FILA " + (out.row || "desconocida"));
+    form.reset();
+    window.location.href = "inscripciones.html";
+  } else {
+    alert("Error al guardar: " + t);
+  }
+})
 
     // -------------------------------
     //  Inicialización
