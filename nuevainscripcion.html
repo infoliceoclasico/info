@@ -153,11 +153,13 @@
       const params = new URLSearchParams(new FormData(form));
       setBtnStateSaving(true);
 
-      fetch("https://script.google.com/macros/s/AKfycbzRZALd1tcyliw66kEG2XxE9tauvaafwAcONYn9530HOb6G8rzgbC4ip3G2dDpITLAH/exec", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: params.toString()
-      })
+    fetch("https://script.google.com/macros/s/AKfycbyA75Sqr0S8rXlItSAWoNAtxu_mDme07Kp2CmjJM6cZkSQBfuULMJXz_mWhK5hBXFmx/exec?mod=datos_insert_window", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+  },
+  body: params.toString()
+})
       .then(r => r.text())
       .then(txt => {
         const t = txt.trim();
