@@ -34,8 +34,8 @@
     // ---------------------------
     //  APIs (NO CAMBIAR)
     // ---------------------------
-    const API = "https://script.google.com/macros/s/AKfycbye7HeuGh6O1VDb9Y_ub1OflO8ck5n-qc_5lsCngc9GwpxUCCrq0XlnzNOU29wxAeA4Sg/exec";
-    const API_DATOS = "https://script.google.com/macros/s/AKfycbyIjSjmXvq4slIPfJsaVq3qxKiB-1sU4oyuZS4xCslf-E0xWNJKaqv0a9GNgBNoZYmRPA/exec";
+    const API = "https://script.google.com/macros/s/AKfycby6x8QFoBVJOVuO_sEl8M50WvpGxPLfc5DdqRrSUxK68W3GEU_4m5zsx0wpmk6UEVtd/exec";
+    const API_DATOS = "https://script.google.com/macros/s/AKfycby6x8QFoBVJOVuO_sEl8M50WvpGxPLfc5DdqRrSUxK68W3GEU_4m5zsx0wpmk6UEVtd/exec";
 
     // id ↔ encabezado en la hoja REINSCRIPCIONES (NO CAMBIAR)
     const MAP = {
@@ -63,7 +63,7 @@
       nac_alumno: "FECHA DE NACIMIENTO (ALUMNO)",
       edad_alumno: "EDAD ACTUAL (ALUMNO)",
       jornada: "JORNADA DEL ALUMNO",
-      grado_2026: "GRADO A CURSAR EN 2026",
+      grado_2027: "GRADO A CURSAR EN 2027",
 
       em1_nombre: "EN CASO DE EMERGENCIA EL NOMBRE DE UN 1ER. CONTACTO",
       em1_parentesco: "EN CASO DE EMERGENCIA EL PARENTESCO DE UN 1ER. CONTACTO",
@@ -78,7 +78,7 @@
       "fecha","proceso_realizar",
       "ape_titular","nom_titular","dpi","nac_titular","parentesco","estado_civil",
       "direccion","tel_pers","correo","ocupacion","lugar_trab",
-      "ape_alumno","nom_alumno","nac_alumno","jornada","grado_2026",
+      "ape_alumno","nom_alumno","nac_alumno","jornada","grado_2027",
       "em1_nombre","em1_parentesco","em1_telefono"
     ];
 
@@ -174,7 +174,7 @@
     }
 
     function populateGrados(jornada, selected){
-      const sel = document.getElementById("grado_2026");
+      const sel = document.getElementById("grado_2027");
       sel.innerHTML = "";
       const d = document.createElement("option"); d.value=""; d.textContent="— Seleccione un grado —";
       sel.appendChild(d);
@@ -199,8 +199,8 @@
       const jornadaVal = row[MAP.jornada] ?? "";
       if (jornadaEl) jornadaEl.value = jornadaVal || "";
 
-      const gradoEl = document.getElementById("grado_2026");
-      const gradoVal = row[MAP.grado_2026] ?? "";
+      const gradoEl = document.getElementById("grado_2027");
+      const gradoVal = row[MAP.grado_2027] ?? "";
       gradoEl.innerHTML = "";
       const opt = document.createElement("option");
       opt.value = gradoVal; opt.textContent = gradoVal || "—";
@@ -372,7 +372,7 @@
       if (f) f.value = todayYYYYMMDD();
 
       const j = (document.getElementById("jornada").value || "Matutina").trim();
-      const gActual = document.getElementById("grado_2026").value || "";
+      const gActual = document.getElementById("grado_2027").value || "";
       populateGrados(j, gActual);
 
       // Mostrar Guardar y APAGAR Confirmar/Modificar
@@ -488,7 +488,7 @@
         nacimientoAlumno: getVal("nac_alumno"),
         edadAlumno: getVal("edad_alumno"),
         jornada: getVal("jornada"),
-        grado2026: getVal("grado_2026"),
+        grado2027: getVal("grado_2027"),
         contacto1: getVal("em1_nombre"),
         parentesco1: getVal("em1_parentesco"),
         telContacto1: getVal("em1_telefono"),
@@ -679,8 +679,8 @@
           </select>
         </div>
         <div>
-          <label for="grado_2026" class="fld"><span class="bar"></span> GRADO A CURSAR EN 2027<span class="req">*</span>:</label>
-          <select id="grado_2026" required>
+          <label for="grado_2027" class="fld"><span class="bar"></span> GRADO A CURSAR EN 2027<span class="req">*</span>:</label>
+          <select id="grado_2027" required>
             <option value="">—</option>
           </select>
         </div>
