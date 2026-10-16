@@ -414,8 +414,23 @@
           body: JSON.stringify(payload)
         });
 
-        // No podemos leer la respuesta (opaque), pero ya se envió y tu Apps Script guarda correctamente.
-        alert("Cambios guardados.");
+        // no-cors no permite leer el POST: verificamos el registro mediante el GET existente.
+        const verificacion = await fetch(`${API}?mod=reinscripcion_detalle&fila=${encodeURIComponent(gFila)}&_=${Date.now()}`, {cache:"no-store"});
+        if (!verificacion.ok) throw new Error(`No se pudo verificar el guardado (HTTP ${verificacion.status}).`);
+        const comprobacion = await verificacion.json();
+        if (!comprobacion.ok || !comprobacion.row) throw new Error("El servidor no confirmó la lectura del registro actualizado.");
+        const esperado = payload.data;
+        const recibido = comprobacion.row;
+        const fechas = new Set([MAP.fecha, MAP.nac_titular, MAP.nac_alumno]);
+        const distintos = Object.keys(esperado).filter(campo => {
+          const a = String(esperado[campo] ?? "").trim();
+          const b = String(recibido[campo] ?? "").trim();
+          return fechas.has(campo) ? toYYYYMMDD(a) !== toYYYYMMDD(b) : a !== b;
+        });
+        if (distintos.length) {
+          throw new Error("No se pudo confirmar que los cambios se guardaron en REINSCRIPCIONES. Revise la hoja antes de continuar. Campos: " + distintos.slice(0, 4).join(", "));
+        }
+        alert("Cambios guardados y verificados en REINSCRIPCIONES.");
         setAllDisabled(true);
         isEdit = false;
         document.getElementById("btnGuardar").classList.add("hidden");
@@ -513,7 +528,7 @@
         }
 
         if (!out.ok && out.error === 'DUPLICADO' && out.row){
-          alert(`Ya existe un registro para ese alumno en DATOS (fila ${out.row}). No se insertó duplicado.`);
+          alert(`El servidor rechazó la confirmación por DUPLICADO (fila ${out.row}). No se insertó ningún registro.\n\nSi la hoja DATOS de 2027 no tiene esa fila ocupada, el problema está en la implementación activa de Apps Script o en otro doPost del proyecto. No es posible corregir esa respuesta desde el HTML sin modificar el servidor.`);
           setAllDisabled(false);
           return;
         }
