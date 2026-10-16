@@ -34,8 +34,8 @@
     // ---------------------------
     //  APIs (NO CAMBIAR)
     // ---------------------------
-    const API = "https://script.google.com/macros/s/AKfycby6x8QFoBVJOVuO_sEl8M50WvpGxPLfc5DdqRrSUxK68W3GEU_4m5zsx0wpmk6UEVtd/exec";
-    const API_DATOS = "https://script.google.com/macros/s/AKfycby6x8QFoBVJOVuO_sEl8M50WvpGxPLfc5DdqRrSUxK68W3GEU_4m5zsx0wpmk6UEVtd/exec";
+    const API = "https://script.google.com/macros/s/AKfycbyA75Sqr0S8rXlItSAWoNAtxu_mDme07Kp2CmjJM6cZkSQBfuULMJXz_mWhK5hBXFmx/exec";
+    const API_DATOS = "https://script.google.com/macros/s/AKfycbyA75Sqr0S8rXlItSAWoNAtxu_mDme07Kp2CmjJM6cZkSQBfuULMJXz_mWhK5hBXFmx/exec";
 
     // id ↔ encabezado en la hoja REINSCRIPCIONES (NO CAMBIAR)
     const MAP = {
@@ -498,7 +498,7 @@
       };
 
       try{
-        const resp = await fetch(API_DATOS, {
+        const resp = await fetch(`${API_DATOS}?mod=datos_insert_window`, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
           body: new URLSearchParams(params).toString()
